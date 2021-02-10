@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.10)
 project(btimetable)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(btimetable main.cpp)
+add_executable(btimetable main.cpp src/ModuleSelector.cpp src/ModuleSelector.h)

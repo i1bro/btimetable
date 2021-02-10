@@ -1,6 +1,7 @@
 #include <iostream>
+#include "src/ModuleSelector.h"
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
-    return 0;
+    ModuleSelector selector;
+    selector.selectModule();
 }
