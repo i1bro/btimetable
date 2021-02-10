@@ -6,6 +6,7 @@
 #define BTIMETABLE_MODULESELECTOR_H
 
 #include <iostream>
+#include "dataBase/EntryPoint.h"
 
 class ModuleSelector {
 public:
