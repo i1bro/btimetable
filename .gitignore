@@ -43,5 +43,6 @@ _deps
 *.exe
 *.out
 *.app
+btimetable
 
 /cmake-build-debug/
