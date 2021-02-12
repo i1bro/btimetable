@@ -35,6 +35,8 @@ void ModuleSelector::selectModule() {
             break;
         case '3':
             std::cout << "Вы в модуле тестирования.\n";
+            EntryPoint entryPoint;
+            entryPoint.run();
             break;
         default:
             std::cout << "Ошибка: неверно введен номер модуля.\n";
