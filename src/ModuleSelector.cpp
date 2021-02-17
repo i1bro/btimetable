@@ -3,6 +3,7 @@
 //
 
 #include "ModuleSelector.h"
+#include "booking/BookingModule.h"
 
 void ModuleSelector::selectModule() {
     std::string input = "0";
@@ -25,10 +26,11 @@ void ModuleSelector::selectModule() {
     }
 
     char selectedModule = input[0];
-
+    BookingModule booking;
     switch (selectedModule) {
         case '1':
             std::cout << "Вы в модуле записи.\n";
+            booking.run();
             break;
         case '2':
             std::cout << "Вы в модуле составления расписания.\n";
