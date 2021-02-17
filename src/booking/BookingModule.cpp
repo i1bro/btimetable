@@ -11,7 +11,6 @@ void BookingModule::enterId() {
     while (!isOnlyNumbers || !isValidId(id)) {
         std::string input;
         std::cout << "Введите ID события, на которое хотите записаться:\n";
-        std::cin.ignore();
         getline(std::cin, input);
         isOnlyNumbers = true;
         for (auto symbol : input) {

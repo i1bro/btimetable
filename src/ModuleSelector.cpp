@@ -15,7 +15,7 @@ void ModuleSelector::selectModule() {
                      "1 -- запись;\n"
                      "2 -- составление расписания;\n"
                      "3 -- тестирование структур данных.\n";
-        std::cin >> input;
+        getline(std::cin, input);
 
         if (input[0] > '3' || input[0] < '1') {
             isValidInput = false;
