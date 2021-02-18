@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <string>
+#include <regex>
 
 class EventAdder{
 public:
