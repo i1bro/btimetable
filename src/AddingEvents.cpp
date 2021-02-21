@@ -11,15 +11,22 @@ void EventAdder::addEvent() {
     while(true){
         std::cout << "1 -- Add an event\n";
         std::cout << "2 -- Exit\n";
-
-        int input;
-        std::cin >> input;
-        if(input == 2)
+        int inputInt = 0;
+        while(true) {
+            std::regex inputPattern(R"(^\s{0,}[1-2]{1,1}\s{0,})");
+            std::string input;
+            getline(std::cin, input);
+            if(std::regex_match(input, inputPattern)){
+                std::stringstream inputStream1(input);
+                inputStream1 >> inputInt;
+                break;
+            }
+            std::cout << "Invalid input format, repeat again\n";
+        }
+        if(inputInt == 2)
             break;
-        std::string debug;
-        getline(std::cin, debug);//нужно из-за того что в буфере остается пустая строка
-        std::cout << "Enter the name of the event" << std::endl;
         std::string event;
+        std::cout << "Enter the name of the event" << std::endl;
         getline(std::cin, event);
         std::cout << "Enter the name of the specialist in the format LastName FirstName\n";
         std::string specialist;
@@ -60,23 +67,23 @@ void EventAdder::addEvent() {
             }
             std::cout << "Invalid input format, repeat again\n";
         }
-        std::cout << "Enter the end time of the event in the format hr.mt\n";
-        int endHour, endMinute;
+        std::cout << "enter the number of minutes that the event will last\n";
+        int duration = 0;
         while(true) {
-            std::regex inputPattern(R"(^\s{0,}[0-9]{2,2}[.][0-9]{2,2}\s{0,})");
+            std::regex inputPattern(R"(^\s{0,}[0-9]{1,}\s{0,})");
             std::string in;
             getline(std::cin, in);
             if(std::regex_match(in, inputPattern)){
                 std::stringstream inputStream1(in);
-                inputStream1 >> endHour >> c >> endMinute;
-                if(endHour >= 0 && endHour <= 23 && endMinute >= 0 && endMinute <= 59)
-                    break;
+                inputStream1 >> duration;
+                break;
             }
             std::cout << "Invalid input format, repeat again\n";
         }//TODO: вставить в струкруру данных
         std::cout << "Your event: " << event << '\n';
         std::cout << "Specialist: " << specialist << '\n';
-        std::cout << "data: " << day << "." << month << '.' << year << '\n';
-        std::cout << "time: " << beginHour << '.' << beginMinute << '-' << endHour << '.' << endMinute << '\n';
+        std::cout << "date: " << day << "." << month << '.' << year << '\n';
+        std::cout << "starttime: " << beginHour << '.' << beginMinute << '\n';
+        std::cout << "duration: " << duration << " minutes\n";
     }
 }
