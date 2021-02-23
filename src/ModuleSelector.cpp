@@ -3,6 +3,7 @@
 //
 
 #include "ModuleSelector.h"
+#include "AddingEvents.h"
 
 void ModuleSelector::selectModule() {
     std::string input = "0";
@@ -31,7 +32,8 @@ void ModuleSelector::selectModule() {
             std::cout << "Вы в модуле записи.\n";
             break;
         case '2':
-            std::cout << "Вы в модуле составления расписания.\n";
+            EventAdder adder;
+            adder.addEvent();
             break;
         case '3':
             std::cout << "Вы в модуле тестирования.\n";
