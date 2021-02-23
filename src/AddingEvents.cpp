@@ -11,6 +11,8 @@ void EventAdder::addEvent() {
     while(true){
         std::cout << "1 -- Add an event\n";
         std::cout << "2 -- Exit\n";
+        std::string debug;
+        getline(std::cin, debug);
         int inputInt = 0;
         while(true) {
             std::regex inputPattern(R"(^\s{0,}[1-2]{1,1}\s{0,})");
@@ -38,11 +40,11 @@ void EventAdder::addEvent() {
             }
             std::cout << "Invalid input format, repeat again\n";
         }
-        std::cout << "Enter the start date of the event in the format dd.mm.yy\n";
+        std::cout << "Enter the start date of the event in the format dd.mm.yyyy\n";
         int day, month, year;
         char c;
         while(true) {
-            std::regex inputPattern(R"(^\s{0,}[0-9]{2,2}[.][0-9]{2,2}[.][0-9]{2,2}\s{0,})");
+            std::regex inputPattern(R"(^\s{0,}[0-9]{2,2}[.][0-9]{2,2}[.][0-9]{4,4}\s{0,})");
             std::string in;
             getline(std::cin, in);
             if(std::regex_match(in, inputPattern)){
