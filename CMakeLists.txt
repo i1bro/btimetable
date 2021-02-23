@@ -3,4 +3,4 @@ project(btimetable)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(btimetable main.cpp src/ModuleSelector.cpp src/ModuleSelector.h src/AddingEvents.cpp src/AddingEvents.h)
+add_executable(btimetable main.cpp src/ModuleSelector.cpp src/ModuleSelector.h src/AddingEvents.cpp src/AddingEvents.h src/dataBase/EntryPoint.cpp src/dataBase/EntryPoint.h)
