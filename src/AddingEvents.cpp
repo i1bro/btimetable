@@ -6,13 +6,16 @@
 
 
 void EventAdder::addEvent() {
-
+    bool firstTime = true;
 
     while(true){
         std::cout << "1 -- Add an event\n";
         std::cout << "2 -- Exit\n";
-        std::string debug;
-        getline(std::cin, debug);
+        if(firstTime) {
+            std::string debug;
+            getline(std::cin, debug);
+            firstTime = false;
+        }
         int inputInt = 0;
         while(true) {
             std::regex inputPattern(R"(^\s{0,}[1-2]{1,1}\s{0,})");
