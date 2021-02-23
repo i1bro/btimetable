@@ -77,6 +77,9 @@ void EntryPoint::run() {
             std::cin >> id;
             test.findOrder(id)->stdPrint();
         }
+        if (command == "exit") {
+            return;
+        }
         std::cout << "> ";
     }
 }
