@@ -5,10 +5,10 @@
 #include "BookingModule.h"
 #include <string>
 
-void BookingModule::enterId() {
+void BookingModule::enterId(dataBase::TestDataBase &testDataBase) {
     id = -1;
     bool isOnlyNumbers = true;
-    while (!isOnlyNumbers || !isValidId(id)) {
+    while (!isOnlyNumbers || !isValidId(id, testDataBase)) {
         std::string input;
         std::cout << "Введите ID события, на которое хотите записаться:\n";
         getline(std::cin, input);
@@ -82,21 +82,29 @@ bool BookingModule::isValidTelephone(std::string &str) {
     return true;
 }
 
-void BookingModule::run(dataBase::TestDataBase dataBase) {
+void BookingModule::run(dataBase::TestDataBase testDataBase) {
     std::cout << "Доступные события:\n";
-    for (dataBase::Company comp : dataBase.companies) {
+    for (dataBase::Company comp : testDataBase.companies) {
         std::cout << "Компания " << comp.name << ":\n";
         for (auto &ord : comp.listOrders()) {
-            std::cout << ord->id << "\n";
+            std::cout << "ID: " << ord->id << ", Мастер: " << ord->employee->full_name << ", Время: " << ord->time_start
+                      << ", Продолжительность: " << ord->duration << "\n";
         }
     }
-    enterId();
+    enterId(testDataBase);
     enterEmail();
     enterTelephone();
 
     std::cout << "ID: " << id << "\ne-mail: " << email << "\nТелефон: " << telephone;
 }
 
-bool BookingModule::isValidId(long long &x) { // TODO: проверка, есть ли такой id в базе данных
-    return x > 0;
+bool BookingModule::isValidId(long long &x,
+                              dataBase::TestDataBase &testDataBase) {
+    bool result = false;
+    for (auto comp : testDataBase.companies) {
+        if (comp.findOrder(x) != nullptr) {
+            result = true;
+        }
+    }
+    return result;
 }

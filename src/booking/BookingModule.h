@@ -14,13 +14,14 @@ public:
     std::string email, telephone;
 
     BookingModule() = default;
-    void enterId();
+
+    void enterId(dataBase::TestDataBase &);
 
     void enterTelephone();
 
     void enterEmail();
 
-    static bool isValidId(long long &);
+    static bool isValidId(long long &, dataBase::TestDataBase &);
 
     static bool isValidTelephone(std::string &);
 
