@@ -4,6 +4,7 @@
 
 #include "ModuleSelector.h"
 #include "booking/BookingModule.h"
+#include "AddingEvents.h"
 
 void ModuleSelector::selectModule(dataBase::TestDataBase testDataBase) {
     std::string input = "0";
@@ -34,7 +35,8 @@ void ModuleSelector::selectModule(dataBase::TestDataBase testDataBase) {
             booking.run(testDataBase);
             break;
         case '2':
-            std::cout << "Вы в модуле составления расписания.\n";
+            EventAdder adder;
+            adder.addEvent();
             break;
         case '3':
             std::cout << "Вы в модуле тестирования.\n";
