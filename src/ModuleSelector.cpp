@@ -1,11 +1,8 @@
-//
-// Created by Ксюша on 09.02.2021.
-//
-
 #include "ModuleSelector.h"
+#include "booking/BookingModule.h"
 #include "AddingEvents.h"
 
-void ModuleSelector::selectModule() {
+void ModuleSelector::selectModule(dataBase::TestDataBase testDataBase) {
     std::string input = "0";
     bool isValidInput = false;
 
@@ -15,7 +12,7 @@ void ModuleSelector::selectModule() {
                      "1 -- запись;\n"
                      "2 -- составление расписания;\n"
                      "3 -- тестирование структур данных.\n";
-        std::cin >> input;
+        getline(std::cin, input);
 
         if (input[0] > '3' || input[0] < '1') {
             isValidInput = false;
@@ -26,10 +23,12 @@ void ModuleSelector::selectModule() {
     }
 
     char selectedModule = input[0];
+    BookingModule booking = BookingModule();
 
     switch (selectedModule) {
         case '1':
             std::cout << "Вы в модуле записи.\n";
+            booking.run(testDataBase);
             break;
         case '2':
             EventAdder adder;
