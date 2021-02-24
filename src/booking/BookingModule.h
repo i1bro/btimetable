@@ -6,12 +6,14 @@
 #define BTIMETABLE_BOOKINGMODULE_H
 
 #include <iostream>
+#include "../dataBase/TestDataBase.h"
 
 class BookingModule {
 public:
-    long long id;
+    long long id = -1;
     std::string email, telephone;
 
+    BookingModule() = default;
     void enterId();
 
     void enterTelephone();
@@ -24,7 +26,7 @@ public:
 
     static bool isValidEmail(std::string &);
 
-    void run();
+    void run(dataBase::TestDataBase);
 };
 
 

@@ -82,7 +82,14 @@ bool BookingModule::isValidTelephone(std::string &str) {
     return true;
 }
 
-void BookingModule::run() {
+void BookingModule::run(dataBase::TestDataBase dataBase) {
+    std::cout << "Доступные события:\n";
+    for (dataBase::Company comp : dataBase.companies) {
+        std::cout << "Компания " << comp.name << ":\n";
+        for (auto &ord : comp.listOrders()) {
+            std::cout << ord->id << "\n";
+        }
+    }
     enterId();
     enterEmail();
     enterTelephone();

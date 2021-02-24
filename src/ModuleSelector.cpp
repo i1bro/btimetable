@@ -5,7 +5,7 @@
 #include "ModuleSelector.h"
 #include "booking/BookingModule.h"
 
-void ModuleSelector::selectModule() {
+void ModuleSelector::selectModule(dataBase::TestDataBase testDataBase) {
     std::string input = "0";
     bool isValidInput = false;
 
@@ -26,11 +26,12 @@ void ModuleSelector::selectModule() {
     }
 
     char selectedModule = input[0];
-    BookingModule booking;
+    BookingModule booking = BookingModule();
+
     switch (selectedModule) {
         case '1':
             std::cout << "Вы в модуле записи.\n";
-            booking.run();
+            booking.run(testDataBase);
             break;
         case '2':
             std::cout << "Вы в модуле составления расписания.\n";

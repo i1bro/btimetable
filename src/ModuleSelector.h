@@ -7,10 +7,11 @@
 
 #include <iostream>
 #include "dataBase/EntryPoint.h"
+#include "dataBase/TestDataBase.h"
 
 class ModuleSelector {
 public:
-    void selectModule();
+    void selectModule(dataBase::TestDataBase);
 };
 
 
