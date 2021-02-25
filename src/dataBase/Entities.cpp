@@ -11,6 +11,12 @@ namespace dataBase {
     }
 
     template<typename T>
+    void Holder<T>::addByPtr(std::shared_ptr<T> element_ptr) {
+        elements.push_back(element_ptr);
+        id_map[element_ptr->id] = element_ptr;
+    }
+
+    template<typename T>
     std::shared_ptr<T> Holder<T>::findById(int id) {
         return id_map[id];
     }
@@ -18,8 +24,8 @@ namespace dataBase {
     template<typename T>
     void Holder<T>::removeById(int id) {
         id_map[id].reset();
-        for(int ind = 0; ind < static_cast<int>(elements.size()); ind++) {
-            if((elements[ind] -> id) == id) {
+        for (int ind = 0; ind < static_cast<int>(elements.size()); ind++) {
+            if ((elements[ind]->id) == id) {
                 elements.erase(elements.begin() + ind);
                 return;
             }
@@ -31,12 +37,12 @@ namespace dataBase {
         return elements;
     }
 
-    void Company::addEmployee(int id_, std::string full_name_) {
-        employees.add(Employee(id_, std::move(full_name_)));
+    void Company::addEmployee(std::string full_name) {
+        employees.add(Employee(++lastEmployeeId, std::move(full_name)));
     }
 
-    void Company::addClient(int id_, std::string full_name_) {
-        clients.add(Client(id_, std::move(full_name_)));
+    void Company::addClient(std::string full_name) {
+        clients.add(Client(++lastClientId, std::move(full_name)));
     }
 
     void Company::deleteEmployee(int id) {
@@ -47,9 +53,8 @@ namespace dataBase {
         clients.removeById(id);
     }
 
-    void Company::addOrder(int id_, int time_start_, int duration_, int client_id, int employee_id) {
-        schedule.addOrder(id_, time_start_, duration_, std::shared_ptr<Client>(clients.findById(client_id)), std::shared_ptr<Employee>(
-                employees.findById(employee_id)));
+    void Company::addOrder(int time_start, int duration, int employee_id) {
+        schedule.addOrder(++lastOrderId, time_start, duration, employee_id);
     }
 
     void Company::deleteOrder(int id) {
@@ -76,24 +81,65 @@ namespace dataBase {
         return clients.listElements();
     }
 
-    const std::vector<std::shared_ptr<Order>> &Company::listOrders() {
-        return schedule.listOrders();
+    const std::vector<std::shared_ptr<Order>> &Company::listVacantOrders() {
+        return schedule.listVacantOrders();
     }
 
-    void Schedule::addOrder(int id_, int time_start_, int duration, std::shared_ptr<Client> client_, std::shared_ptr<Employee> employee_) {
-        orders.add(Order(id_, time_start_, duration, std::move(client_), std::move(employee_)));
+    const std::vector<std::shared_ptr<Order>> &Company::listBookedOrders() {
+        return schedule.listBookedOrders();
+    }
+
+    int Company::getLastEmployeeId() const {
+        return lastEmployeeId;
+    }
+
+    int Company::getLastClientId() const {
+        return lastClientId;
+    }
+
+    int Company::getLastOrderId() const {
+        return lastOrderId;
+    }
+
+    void Company::bookOrder(int id, int client_id) {
+        schedule.bookOrder(id, client_id);
+    }
+
+    void Schedule::addOrder(int id, int time_start, int duration, int employee_id) {
+        vacant_orders.add(Order(id, time_start, duration, employee_id));
     }
 
     void Schedule::deleteOrder(int id) {
-        orders.removeById(id);
+        vacant_orders.removeById(id);
+        booked_orders.removeById(id);
     }
 
     std::shared_ptr<Order> Schedule::findOrder(int id) {
-        return orders.findById(id);
+        auto ptr = vacant_orders.findById(id);
+        if(ptr) {
+            return ptr;
+        } else {
+            return booked_orders.findById(id);
+        }
     }
 
-    const std::vector<std::shared_ptr<Order>> &Schedule::listOrders() {
-        return orders.listElements();
+    const std::vector<std::shared_ptr<Order>> &Schedule::listVacantOrders() {
+        return vacant_orders.listElements();
+    }
+
+    const std::vector<std::shared_ptr<Order>> &Schedule::listBookedOrders() {
+        return booked_orders.listElements();
+    }
+
+    void Schedule::bookOrder(int id, int client_id) {
+        auto order = vacant_orders.findById(id);
+        if(!order) {
+            std::cerr << "Incorrect order id" << "\n";
+            return;
+        }
+        order -> client_id = client_id;
+        booked_orders.addByPtr(order);
+        vacant_orders.removeById(id);
     }
 
     void Employee::stdPrint() const {
@@ -105,9 +151,7 @@ namespace dataBase {
     }
 
     void Order::stdPrint() const {
-        std::cout << "Order:{" << id << ", " << time_start << ", " << duration << ", ";
-        client->stdPrint();
-        employee->stdPrint();
-        std::cout << "}" << std::endl;
+        std::cout << "Order:{" << id << ", " << time_start << ", " << duration << ", " << client_id << ", "
+                  << employee_id << "}";
     }
 }
