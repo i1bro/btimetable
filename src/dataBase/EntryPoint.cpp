@@ -25,27 +25,33 @@ void EntryPoint::run() {
             }
         }
         if (command == "list_ord") {
-            for (auto &i: test.listOrders()) {
+            std::cout << "Vacant:\n";
+            for (auto &i: test.listVacantOrders()) {
+                std::cout << "  ";
+                i -> stdPrint();
+                std::cout << "\n";
+            }
+            std::cout << "Booked:\n";
+            for (auto &i: test.listBookedOrders()) {
+                std::cout << "  ";
                 i -> stdPrint();
                 std::cout << "\n";
             }
         }
         if (command == "add_emp") {
-            int id;
             std::string name;
-            std::cin >> id >> name;
-            test.addEmployee(id, std::move(name));
+            std::cin >> name;
+            test.addEmployee(std::move(name));
         }
         if (command == "add_cli") {
-            int id;
             std::string name;
-            std::cin >> id >> name;
-            test.addClient(id, std::move(name));
+            std::cin >> name;
+            test.addClient(std::move(name));
         }
         if (command == "add_ord") {
-            int id, time_start, duration, client_id, employee_id;
-            std::cin >> id >> time_start >> duration >> client_id >> employee_id;
-            test.addOrder(id, time_start, duration, client_id, employee_id);
+            int time_start, duration, employee_id;
+            std::cin >> time_start >> duration >> employee_id;
+            test.addOrder(time_start, duration, employee_id);
         }
         if (command == "del_emp") {
             int id;
@@ -65,17 +71,40 @@ void EntryPoint::run() {
         if (command == "find_emp") {
             int id;
             std::cin >> id;
-            test.findEmployee(id)->stdPrint();
+            auto res = test.findEmployee(id);
+            if(res) {
+                res->stdPrint();
+            } else {
+                std::cout << "Incorrect id";
+            }
+            std::cout << "\n";
         }
         if (command == "find_cli") {
             int id;
             std::cin >> id;
-            test.findClient(id)->stdPrint();
+            auto res = test.findClient(id);
+            if(res) {
+                res->stdPrint();
+            } else {
+                std::cout << "Incorrect id";
+            }
+            std::cout << "\n";
         }
         if (command == "find_ord") {
             int id;
             std::cin >> id;
-            test.findOrder(id)->stdPrint();
+            auto res = test.findOrder(id);
+            if(res) {
+                res->stdPrint();
+            } else {
+                std::cout << "Incorrect id";
+            }
+            std::cout << "\n";
+        }
+        if (command == "book_ord") {
+            int id, client_id;
+            std::cin >> id >> client_id;
+            test.bookOrder(id, client_id);
         }
         if (command == "exit") {
             return;

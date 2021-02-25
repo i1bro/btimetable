@@ -20,6 +20,8 @@ namespace dataBase {
 
         void add(T value);
 
+        void addByPtr(std::shared_ptr<T> element_ptr);
+
         std::shared_ptr<T> findById(int id);
 
         [[nodiscard]] const std::vector<std::shared_ptr<T>> &listElements();
@@ -32,7 +34,7 @@ namespace dataBase {
 
     public:
         const int id = 0;
-        const std::string full_name;
+        std::string full_name;
 
         Employee() = default;
 
@@ -46,7 +48,7 @@ namespace dataBase {
 
     public:
         const int id = 0;
-        const std::string full_name;
+        std::string full_name;
 
         Client() = default;
 
@@ -59,33 +61,44 @@ namespace dataBase {
     private:
 
     public:
-        const int id = 0, time_start = 0, duration = 0;
-        const std::shared_ptr<Client> client;
-        const std::shared_ptr<Employee> employee;
+        const int id = 0;
+        int time_start = 0;
+        int duration = 0;
+        int client_id = -1;
+        int employee_id = -1;
 
         Order() = default;
 
-        Order(int id_, int time_start_, int duration_, std::shared_ptr<Client> client_,
-              std::shared_ptr<Employee> employee_) : id(id_),
-                                                   time_start(time_start_),
-                                                   duration(duration_),
-                                                   client(std::move(client_)),
-                                                   employee(std::move(employee_)) {}
+        Order(int id_, int time_start_, int duration_, int client_id_, int employee_id_) : id(id_),
+                                                                                           time_start(time_start_),
+                                                                                           duration(duration_),
+                                                                                           client_id(client_id_),
+                                                                                           employee_id(employee_id_) {}
+
+        Order(int id_, int time_start_, int duration_, int employee_id_) : id(id_),
+                                                                           time_start(time_start_),
+                                                                           duration(duration_),
+                                                                           employee_id(employee_id_) {}
 
         void stdPrint() const;
     };
 
     class Schedule {
     private:
-        Holder<Order> orders;
+        Holder<Order> vacant_orders;
+        Holder<Order> booked_orders;
     public:
         Schedule() = default;
 
-        void addOrder(int id_, int time_start_, int duration_, std::shared_ptr<Client> client_, std::shared_ptr<Employee> employee_);
+        void addOrder(int id, int time_start, int duration, int employee_id);
 
         std::shared_ptr<Order> findOrder(int id);
 
-        [[nodiscard]] const std::vector<std::shared_ptr<Order>> &listOrders();
+        [[nodiscard]] const std::vector<std::shared_ptr<Order>> &listVacantOrders();
+
+        [[nodiscard]] const std::vector<std::shared_ptr<Order>> &listBookedOrders();
+
+        void bookOrder(int id, int client_id);
 
         void deleteOrder(int id);
     };
@@ -95,14 +108,17 @@ namespace dataBase {
         Holder<Employee> employees;
         Holder<Client> clients;
         Schedule schedule;
+        int lastEmployeeId = 0;
+        int lastClientId = 0;
+        int lastOrderId = 0;
     public:
-        const std::string name;
+        std::string name;
 
         Company() = default;
 
         explicit Company(std::string name_) : name(std::move(name_)) {}
 
-        void addEmployee(int id_, std::string full_name_);
+        void addEmployee(std::string full_name);
 
         std::shared_ptr<Employee> findEmployee(int id);
 
@@ -110,7 +126,7 @@ namespace dataBase {
 
         void deleteEmployee(int id);
 
-        void addClient(int id_, std::string full_name_);
+        void addClient(std::string full_name);
 
         std::shared_ptr<Client> findClient(int id);
 
@@ -118,13 +134,23 @@ namespace dataBase {
 
         void deleteClient(int id);
 
-        void addOrder(int id_, int time_start_, int duration_, int client_id, int employee_id);
+        void addOrder(int time_start, int duration, int employee_id);
 
         std::shared_ptr<Order> findOrder(int id);
 
-        [[nodiscard]] const std::vector<std::shared_ptr<Order>> &listOrders();
+        [[nodiscard]] const std::vector<std::shared_ptr<Order>> &listVacantOrders();
+
+        [[nodiscard]] const std::vector<std::shared_ptr<Order>> &listBookedOrders();
+
+        void bookOrder(int id, int client_id);
 
         void deleteOrder(int id);
+
+        [[nodiscard]] int getLastEmployeeId() const;
+
+        [[nodiscard]] int getLastClientId() const;
+
+        [[nodiscard]] int getLastOrderId() const;
     };
 
 }
