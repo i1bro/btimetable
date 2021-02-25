@@ -86,9 +86,9 @@ void BookingModule::run(dataBase::TestDataBase testDataBase) {
     std::cout << "Доступные события:\n";
     for (dataBase::Company comp : testDataBase.companies) {
         std::cout << "Компания " << comp.name << ":\n";
-        for (auto &ord : comp.listOrders()) {
-            std::cout << "ID: " << ord->id << ", Мастер: " << ord->employee->full_name << ", Время: " << ord->time_start
-                      << ", Продолжительность: " << ord->duration << "\n";
+        for (auto &ord : comp.listVacantOrders()) {
+            std::cout << "ID события: " << ord->id << ", ID мастера: " << ord->employee_id << ", Время: "
+                      << ord->time_start << ", Продолжительность: " << ord->duration << "\n";
         }
     }
     enterId(testDataBase);
