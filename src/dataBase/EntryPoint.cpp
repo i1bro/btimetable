@@ -14,13 +14,13 @@ void EntryPoint::run() {
         std::cin >> command;
         if (command == "list_emp") {
             for (auto &i: test.listEmployees()) {
-                i -> stdPrint();
+                i->stdPrint();
                 std::cout << "\n";
             }
         }
         if (command == "list_cli") {
             for (auto &i: test.listClients()) {
-                i -> stdPrint();
+                i->stdPrint();
                 std::cout << "\n";
             }
         }
@@ -28,13 +28,13 @@ void EntryPoint::run() {
             std::cout << "Vacant:\n";
             for (auto &i: test.listVacantOrders()) {
                 std::cout << "  ";
-                i -> stdPrint();
+                i->stdPrint();
                 std::cout << "\n";
             }
             std::cout << "Booked:\n";
             for (auto &i: test.listBookedOrders()) {
                 std::cout << "  ";
-                i -> stdPrint();
+                i->stdPrint();
                 std::cout << "\n";
             }
         }
@@ -72,7 +72,7 @@ void EntryPoint::run() {
             int id;
             std::cin >> id;
             auto res = test.findEmployee(id);
-            if(res) {
+            if (res) {
                 res->stdPrint();
             } else {
                 std::cout << "Incorrect id";
@@ -83,7 +83,7 @@ void EntryPoint::run() {
             int id;
             std::cin >> id;
             auto res = test.findClient(id);
-            if(res) {
+            if (res) {
                 res->stdPrint();
             } else {
                 std::cout << "Incorrect id";
@@ -94,7 +94,7 @@ void EntryPoint::run() {
             int id;
             std::cin >> id;
             auto res = test.findOrder(id);
-            if(res) {
+            if (res) {
                 res->stdPrint();
             } else {
                 std::cout << "Incorrect id";

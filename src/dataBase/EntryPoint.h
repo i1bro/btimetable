@@ -8,6 +8,7 @@
 class EntryPoint {
 public:
     EntryPoint() = default;
+
     void run();
 };
 

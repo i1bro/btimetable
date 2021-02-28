@@ -116,7 +116,7 @@ namespace dataBase {
 
     std::shared_ptr<Order> Schedule::findOrder(int id) {
         auto ptr = vacant_orders.findById(id);
-        if(ptr) {
+        if (ptr) {
             return ptr;
         } else {
             return booked_orders.findById(id);
@@ -133,11 +133,11 @@ namespace dataBase {
 
     void Schedule::bookOrder(int id, int client_id) {
         auto order = vacant_orders.findById(id);
-        if(!order) {
+        if (!order) {
             std::cerr << "Incorrect order id" << "\n";
             return;
         }
-        order -> client_id = client_id;
+        order->client_id = client_id;
         booked_orders.addByPtr(order);
         vacant_orders.removeById(id);
     }

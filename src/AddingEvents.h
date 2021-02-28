@@ -9,7 +9,7 @@
 #include <string>
 #include <regex>
 
-class EventAdder{
+class EventAdder {
 public:
     void addEvent();
 };
