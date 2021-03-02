@@ -41,7 +41,8 @@ void BookingModule::enterTelephone() {
 }
 
 bool BookingModule::isValidEmail(std::string &str) {
-    int posOfFirstAt = str.find_first_of('@'), posOfLastAt = str.find_last_of('@');
+    int posOfFirstAt = str.find_first_of('@'),
+        posOfLastAt = str.find_last_of('@');
     if (posOfFirstAt != posOfLastAt || posOfFirstAt == std::string::npos) {
         return false;
     }
@@ -87,15 +88,18 @@ void BookingModule::run(dataBase::TestDataBase testDataBase) {
     for (dataBase::Company comp : testDataBase.companies) {
         std::cout << "Компания " << comp.name << ":\n";
         for (auto &ord : comp.listVacantOrders()) {
-            std::cout << "ID события: " << ord->id << ", ID мастера: " << ord->employee_id << ", Время: "
-                      << ord->time_start << ", Продолжительность: " << ord->duration << "\n";
+            std::cout << "ID события: " << ord->id
+                      << ", ID мастера: " << ord->employee_id
+                      << ", Время: " << ord->time_start
+                      << ", Продолжительность: " << ord->duration << "\n";
         }
     }
     enterId(testDataBase);
     enterEmail();
     enterTelephone();
 
-    std::cout << "ID: " << id << "\ne-mail: " << email << "\nТелефон: " << telephone;
+    std::cout << "ID: " << id << "\ne-mail: " << email
+              << "\nТелефон: " << telephone;
 }
 
 bool BookingModule::isValidId(long long &x,

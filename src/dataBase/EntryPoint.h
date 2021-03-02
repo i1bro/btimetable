@@ -12,4 +12,4 @@ public:
     void run();
 };
 
-#endif //BTIMETABLE_ENTRYPOINT_H
+#endif  // BTIMETABLE_ENTRYPOINT_H

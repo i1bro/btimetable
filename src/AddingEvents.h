@@ -6,12 +6,12 @@
 #define BTIMETABLE_ADDINGEVENTS_H
 
 #include <iostream>
-#include <string>
 #include <regex>
+#include <string>
 
 class EventAdder {
 public:
     void addEvent();
 };
 
-#endif //BTIMETABLE_ADDINGEVENTS_H
+#endif  // BTIMETABLE_ADDINGEVENTS_H

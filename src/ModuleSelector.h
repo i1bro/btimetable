@@ -14,5 +14,4 @@ public:
     void selectModule(dataBase::TestDataBase);
 };
 
-
-#endif //BTIMETABLE_MODULESELECTOR_H
+#endif  // BTIMETABLE_MODULESELECTOR_H

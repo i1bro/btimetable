@@ -1,6 +1,6 @@
 #include "ModuleSelector.h"
-#include "booking/BookingModule.h"
 #include "AddingEvents.h"
+#include "booking/BookingModule.h"
 
 void ModuleSelector::selectModule(dataBase::TestDataBase testDataBase) {
     std::string input = "0";
@@ -41,6 +41,6 @@ void ModuleSelector::selectModule(dataBase::TestDataBase testDataBase) {
             break;
         default:
             std::cout << "Ошибка: неверно введен номер модуля.\n";
-            return; // TODO: exception
+            return;  // TODO: exception
     }
 }

@@ -2,9 +2,9 @@
 // Created by Ilya on 10.02.2021.
 //
 
-#include "iostream"
 #include "EntryPoint.h"
 #include "Entities.h"
+#include "iostream"
 
 void EntryPoint::run() {
     dataBase::Company test("test");
@@ -13,26 +13,26 @@ void EntryPoint::run() {
         std::string command;
         std::cin >> command;
         if (command == "list_emp") {
-            for (auto &i: test.listEmployees()) {
+            for (auto &i : test.listEmployees()) {
                 i->stdPrint();
                 std::cout << "\n";
             }
         }
         if (command == "list_cli") {
-            for (auto &i: test.listClients()) {
+            for (auto &i : test.listClients()) {
                 i->stdPrint();
                 std::cout << "\n";
             }
         }
         if (command == "list_ord") {
             std::cout << "Vacant:\n";
-            for (auto &i: test.listVacantOrders()) {
+            for (auto &i : test.listVacantOrders()) {
                 std::cout << "  ";
                 i->stdPrint();
                 std::cout << "\n";
             }
             std::cout << "Booked:\n";
-            for (auto &i: test.listBookedOrders()) {
+            for (auto &i : test.listBookedOrders()) {
                 std::cout << "  ";
                 i->stdPrint();
                 std::cout << "\n";
@@ -49,9 +49,10 @@ void EntryPoint::run() {
             test.addClient(std::move(name));
         }
         if (command == "add_ord") {
+            std::string title;
             int time_start, duration, employee_id;
-            std::cin >> time_start >> duration >> employee_id;
-            test.addOrder(time_start, duration, employee_id);
+            std::cin >> title >> time_start >> duration >> employee_id;
+            test.addOrder(std::move(title), time_start, duration, employee_id);
         }
         if (command == "del_emp") {
             int id;

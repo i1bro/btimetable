@@ -5,17 +5,16 @@
 #ifndef BTIMETABLE_TESTDATABASE_H
 #define BTIMETABLE_TESTDATABASE_H
 
-#include "Entities.h"
 #include <vector>
+#include "Entities.h"
 
 namespace dataBase {
-    class TestDataBase {
-    public:
-        std::vector<Company> companies;
+class TestDataBase {
+public:
+    std::vector<Company> companies;
 
-        void make();
+    void make();
+};
+}  // namespace dataBase
 
-    };
-}
-
-#endif //BTIMETABLE_TESTDATABASE_H
+#endif  // BTIMETABLE_TESTDATABASE_H

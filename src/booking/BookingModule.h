@@ -30,5 +30,4 @@ public:
     void run(dataBase::TestDataBase);
 };
 
-
-#endif //BTIMETABLE_BOOKINGMODULE_H
+#endif  // BTIMETABLE_BOOKINGMODULE_H
