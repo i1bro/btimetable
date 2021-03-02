@@ -6,9 +6,9 @@ void TestDataBase::make() {
     Employee emp1 = Employee(436472472, "Anna"),
              emp2 = Employee(36273672, "Vera"),
              emp3 = Employee(7446254, "Ivan");
-    A.addEmployee(emp1.full_name);
-    A.addEmployee(emp2.full_name);
-    A.addEmployee(emp3.full_name);
+    A.addEmployee(emp1.fullName);
+    A.addEmployee(emp2.fullName);
+    A.addEmployee(emp3.fullName);
 
     A.addOrder("I", 0, 3, emp1.id);
     A.addOrder("did", 6, 2, emp1.id);

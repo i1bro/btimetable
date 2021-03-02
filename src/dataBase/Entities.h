@@ -13,7 +13,7 @@ namespace dataBase {
 template <typename T>
 class Holder {
 private:
-    std::map<int, std::shared_ptr<T>> id_map;
+    std::map<int, std::shared_ptr<T>> idMap;
     std::vector<std::shared_ptr<T>> elements;
 
 public:
@@ -21,7 +21,7 @@ public:
 
     void add(T value);
 
-    void addByPtr(std::shared_ptr<T> element_ptr);
+    void addByPtr(std::shared_ptr<T> elementPtr);
 
     std::shared_ptr<T> findById(int id);
 
@@ -34,12 +34,12 @@ class Employee {
 private:
 public:
     const int id = 0;
-    std::string full_name;
+    std::string fullName;
 
     Employee() = default;
 
-    Employee(int id_, std::string full_name_)
-        : id(id_), full_name(std::move(full_name_)) {
+    Employee(int id_, std::string fullName_)
+        : id(id_), fullName(std::move(fullName_)) {
     }
 
     void stdPrint() const;
@@ -49,12 +49,12 @@ class Client {
 private:
 public:
     const int id = 0;
-    std::string full_name;
+    std::string fullName;
 
     Client() = default;
 
-    Client(int id_, std::string full_name_)
-        : id(id_), full_name(std::move(full_name_)) {
+    Client(int id_, std::string fullName_)
+        : id(id_), fullName(std::move(fullName_)) {
     }
 
     void stdPrint() const;
@@ -65,37 +65,37 @@ private:
 public:
     const int id = 0;
     std::string title;
-    int time_start = 0;
+    int timeStart = 0;
     int duration = 0;
-    int client_id = -1;
-    int employee_id = -1;
+    int clientId = -1;
+    int employeeId = -1;
 
     Order() = default;
 
     Order(int id_,
           std::string title_,
-          int time_start_,
+          int timeStart_,
           int duration_,
-          int client_id_,
-          int employee_id_)
+          int clientId_,
+          int employeeId_)
         : id(id_),
           title(std::move(title_)),
-          time_start(time_start_),
+          timeStart(timeStart_),
           duration(duration_),
-          client_id(client_id_),
-          employee_id(employee_id_) {
+          clientId(clientId_),
+          employeeId(employeeId_) {
     }
 
     Order(int id_,
           std::string title_,
-          int time_start_,
+          int timeStart_,
           int duration_,
-          int employee_id_)
+          int employeeId_)
         : id(id_),
           title(std::move(title_)),
-          time_start(time_start_),
+          timeStart(timeStart_),
           duration(duration_),
-          employee_id(employee_id_) {
+          employeeId(employeeId_) {
     }
 
     void stdPrint() const;
@@ -103,17 +103,17 @@ public:
 
 class Schedule {
 private:
-    Holder<Order> vacant_orders;
-    Holder<Order> booked_orders;
+    Holder<Order> vacantOrders;
+    Holder<Order> bookedOrders;
 
 public:
     Schedule() = default;
 
     void addOrder(int id,
                   std::string title,
-                  int time_start,
+                  int timeStart,
                   int duration,
-                  int employee_id);
+                  int employeeId);
 
     std::shared_ptr<Order> findOrder(int id);
 
@@ -121,7 +121,7 @@ public:
 
     [[nodiscard]] const std::vector<std::shared_ptr<Order>> &listBookedOrders();
 
-    void bookOrder(int id, int client_id);
+    void bookOrder(int id, int clientId);
 
     void deleteOrder(int id);
 };
@@ -143,7 +143,7 @@ public:
     explicit Company(std::string name_) : name(std::move(name_)) {
     }
 
-    void addEmployee(std::string full_name);
+    void addEmployee(std::string fullName);
 
     std::shared_ptr<Employee> findEmployee(int id);
 
@@ -151,7 +151,7 @@ public:
 
     void deleteEmployee(int id);
 
-    void addClient(std::string full_name);
+    void addClient(std::string fullName);
 
     std::shared_ptr<Client> findClient(int id);
 
@@ -160,9 +160,9 @@ public:
     void deleteClient(int id);
 
     void addOrder(std::string title,
-                  int time_start,
+                  int timeStart,
                   int duration,
-                  int employee_id);
+                  int employeeId);
 
     std::shared_ptr<Order> findOrder(int id);
 
@@ -170,7 +170,7 @@ public:
 
     [[nodiscard]] const std::vector<std::shared_ptr<Order>> &listBookedOrders();
 
-    void bookOrder(int id, int client_id);
+    void bookOrder(int id, int clientId);
 
     void deleteOrder(int id);
 
