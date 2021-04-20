@@ -10,37 +10,45 @@ class Service {
 private:
     Storage storage;
 
+    void saveOrder(const Order &order);
+
+    void saveEmployee(const Employee &employee);
+
+    void saveClient(const Client &client);
+
+    void saveCompany(const Company &company);
+
 public:
     Service() = default;
 
     void createCompany(std::string name);
 
-    Order createOrder(std::string companyName,
+    Order createOrder(long long companyId,
                       std::string title,
                       int timeStart,
                       int duration,
                       int employeeId);
 
-    Order createOrder(std::string companyName,
+    Order createOrder(long long companyId,
                       std::string title,
                       int timeStart,
                       int duration,
                       int clientId,
                       int employeeId);
 
-    Employee createEmployee(std::string companyName, std::string fullName);
+    Employee createEmployee(long long companyId, std::string fullName);
 
-    Client createClient(std::string fullName);
+    Client createClient(std::string fullName, std::string phoneNumber, std::string email);
 
-    std::vector<long long> listVacantOrders(std::string companyName);
+    std::vector<long long> listVacantOrders(long long companyId);
 
-    std::vector<long long> listBookedOrders(std::string companyName);
+    std::vector<long long> listBookedOrders(long long companyId);
 
-    std::vector<long long> listAllOrders(std::string companyName);
+    std::vector<long long> listAllOrders(long long companyId);
 
-    void deleteOrder(std::string companyName, long long orderId);
+    void deleteOrder(long long companyId, long long orderId);
 
-    void deleteEmployee(std::string companyName, long long employeeId);
+    void deleteEmployee(long long companyId, long long employeeId);
 
     Order getOrderById(long long id);
 
@@ -48,11 +56,7 @@ public:
 
     Client getClientById(long long id);
 
-    void modifyOrder(const Order &order);
-
-    void modifyEmployee(const Employee &employee);
-
-    void modifyClient(const Client &client);
+    Company getCompanyById(long long id);
 
     std::vector<long long> listOrdersOfEmployee(long long employeeId);
 

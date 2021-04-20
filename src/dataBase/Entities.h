@@ -2,6 +2,7 @@
 #define BTIMETABLE_ENTITIES_H
 
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace dataBase {
@@ -25,12 +26,14 @@ private:
 public:
     const long long id = 0;
     std::string fullName;
+    std::string phoneNumber;
+    std::string email;
 
     explicit Client(long long id_) : id(id_) {
     }
 
-    Client(long long id_, std::string fullName_)
-        : id(id_), fullName(std::move(fullName_)) {
+    Client(long long id_, std::string fullName_, std::string phoneNumber_, std::string email_)
+        : id(id_), fullName(std::move(fullName_)), phoneNumber(std::move(phoneNumber_)), email(std::move(email_)) {
     }
 };
 
@@ -39,20 +42,20 @@ private:
 public:
     const long long id = 0;
     std::string title;
-    int timeStart = -1;
-    int duration = -1;
-    int clientId = -1;
-    int employeeId = -1;
+    long long timeStart = -1;
+    long long duration = -1;
+    long long clientId = -1;
+    long long employeeId = -1;
 
     explicit Order(long long id_) : id(id_) {
     }
 
     Order(long long id_,
           std::string title_,
-          int timeStart_,
-          int duration_,
-          int clientId_,
-          int employeeId_)
+          long long timeStart_,
+          long long duration_,
+          long long clientId_,
+          long long employeeId_)
         : id(id_),
           title(std::move(title_)),
           timeStart(timeStart_),
@@ -63,9 +66,9 @@ public:
 
     Order(long long id_,
           std::string title_,
-          int timeStart_,
-          int duration_,
-          int employeeId_)
+          long long timeStart_,
+          long long duration_,
+          long long employeeId_)
         : id(id_),
           title(std::move(title_)),
           timeStart(timeStart_),
@@ -99,9 +102,13 @@ private:
     Schedule schedule;
 
 public:
-    const std::string name;
+    const long long id = 0;
+    std::string name;
 
-    explicit Company(std::string name_) : name(std::move(name_)) {
+    explicit Company(long long id_) : id(id_) {
+    }
+
+    explicit Company(long long id_, std::string name_) : id(id_), name(std::move(name_)) {
     }
 
     void addEmployee(long long id);

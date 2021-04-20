@@ -10,6 +10,7 @@ class Storage {
 private:
     sw::redis::Redis redis = sw::redis::Redis("tcp://127.0.0.1:6379");
 
+    void storeSchedule(const Schedule &schedule, std::string &&prefix = "");
 public:
     Storage() = default;
 
@@ -19,13 +20,13 @@ public:
 
     long long giveOrderId();
 
+    long long giveCompanyId();
+
     void storeEmployee(const Employee &employee);
 
     void storeClient(const Client &client);
 
     void storeOrder(const Order &order);
-
-    void storeSchedule(const Schedule &schedule, std::string &&prefix = "");
 
     void storeCompany(const Company &company);
 
@@ -35,16 +36,15 @@ public:
 
     Order getOrderById(long long id);
 
-    Company getCompanyByName(std::string name);
+    Company getCompanyById(long long id);
 
-    void setEmployeesCompany(long long employeeId,
-                             const std::string &companyName);
+    void setEmployeesCompany(long long employeeId, long long companyId);
 
-    void setOrdersCompany(long long orderId, const std::string &companyName);
+    void setOrdersCompany(long long orderId, long long companyId);
 
-    std::string getEmployeesCompany(long long employeeId);
+    long long getEmployeesCompany(long long employeeId);
 
-    std::string getOrdersCompany(long long orderId);
+    long long getOrdersCompany(long long orderId);
 
     void addOrderToEmployee(long long employeeId, long long orderId);
 

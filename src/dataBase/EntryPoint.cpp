@@ -4,6 +4,7 @@
 #include "iostream"
 
 void EntryPoint::run() {
+    /*
     dataBase::Company test("test");
     dataBase::Storage st;
     std::cout << "> ";
@@ -113,4 +114,5 @@ void EntryPoint::run() {
         }
         std::cout << "> ";
     }
+     */
 }

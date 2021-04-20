@@ -7,12 +7,14 @@ find_library(HIREDIS hiredis lib)
 find_library(REDIS++ redis++ lib)
 
 add_executable(btimetable main.cpp
-        src/ModuleSelector.cpp
+        #src/ModuleSelector.cpp
+        src/dataBase/ClientAPI.h
+        src/dataBase/CompanyAPI.h
         src/dataBase/EntryPoint.cpp
-        src/AddingEvents.cpp
-        src/booking/BookingModule.cpp
+        #src/AddingEvents.cpp
+        #src/booking/BookingModule.cpp
         src/dataBase/Entities.cpp
-        src/dataBase/TestDataBase.cpp
+        #src/dataBase/TestDataBase.cpp
         src/dataBase/Storage.cpp
         src/dataBase/Service.cpp)
 

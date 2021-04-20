@@ -15,6 +15,10 @@ long long Storage::giveOrderId() {
     return redis.incr("lastEmployeeId");
 }
 
+long long Storage::giveCompanyId() {
+    return redis.incr("lastCompanyId");
+}
+
 void Storage::storeEmployee(const Employee &employee) {
     std::string key = "Employee:" + std::to_string(employee.id);
     nlohmann::json value;
@@ -26,6 +30,8 @@ void Storage::storeClient(const Client &client) {
     std::string key = "Client:" + std::to_string(client.id);
     nlohmann::json value;
     value["fullName"] = client.fullName;
+    value["phoneNumber"] = client.phoneNumber;
+    value["email"] = client.email;
     redis.set(key, value.dump());
 }
 
@@ -53,8 +59,9 @@ void Storage::storeSchedule(const Schedule &schedule, std::string &&prefix) {
 }
 
 void Storage::storeCompany(const Company &company) {
-    std::string key = "Company:" + company.name;
+    std::string key = "Company:" + std::to_string(company.id);
     nlohmann::json value;
+    value["name"] = company.name;
     for (auto i : company.listEmployees()) {
         value["employees"].push_back(i);
     }
@@ -64,7 +71,7 @@ void Storage::storeCompany(const Company &company) {
 
 Employee Storage::getEmployeeById(long long id) {
     std::string key = "Employee:" + std::to_string(id);
-    nlohmann::json value = nlohmann::json::parse(redis.get(key));
+    nlohmann::json value = nlohmann::json::parse(redis.get(key).value());
     Employee employee(id);
     employee.fullName = value["fullName"];
     return std::move(employee);
@@ -72,7 +79,7 @@ Employee Storage::getEmployeeById(long long id) {
 
 Client Storage::getClientById(long long id) {
     std::string key = "Client:" + std::to_string(id);
-    nlohmann::json value = nlohmann::json::parse(redis.get(key));
+    nlohmann::json value = nlohmann::json::parse(redis.get(key).value());
     Client client(id);
     client.fullName = value["fullName"];
     return std::move(client);
@@ -80,7 +87,7 @@ Client Storage::getClientById(long long id) {
 
 Order Storage::getOrderById(long long id) {
     std::string key = "Order:" + std::to_string(id);
-    nlohmann::json value = nlohmann::json::parse(redis.get(key));
+    nlohmann::json value = nlohmann::json::parse(redis.get(key).value());
     Order order(id);
     order.title = value["title"];
     order.timeStart = value["timeStart"];
@@ -90,12 +97,13 @@ Order Storage::getOrderById(long long id) {
     return std::move(order);
 }
 
-Company Storage::getCompanyByName(std::string name) {
-    std::string key = "Order:" + name;
-    nlohmann::json value = nlohmann::json::parse(redis.get(key));
+Company Storage::getCompanyById(long long int id) {
+    std::string key = "Company:" + std::to_string(id);
+    nlohmann::json value = nlohmann::json::parse(redis.get(key).value());
     nlohmann::json schedule =
-        nlohmann::json::parse(redis.get(key + ":schedule"));
-    Company company(std::move(name));
+        nlohmann::json::parse(redis.get(key + ":schedule").value());
+    Company company(id);
+    company.name = value["name"];
     for (long long i : value["employees"]) {
         company.addEmployee(i);
     }
@@ -108,28 +116,26 @@ Company Storage::getCompanyByName(std::string name) {
     return std::move(company);
 }
 
-void Storage::setEmployeesCompany(long long int employeeId,
-                                  const std::string &companyName) {
-    std::string key = "Employee:" + std::to_string(employeeId) + ":companyName";
-    redis.set(key, companyName);
+void Storage::setEmployeesCompany(long long int employeeId, long long companyId) {
+    std::string key = "Employee:" + std::to_string(employeeId) + ":companyId";
+    redis.set(key, std::to_string(companyId));
 }
 
-void Storage::setOrdersCompany(long long int orderId,
-                               const std::string &companyName) {
-    std::string key = "Order:" + std::to_string(orderId) + ":companyName";
-    redis.set(key, companyName);
+void Storage::setOrdersCompany(long long int orderId, long long companyId) {
+    std::string key = "Order:" + std::to_string(orderId) + ":companyId";
+    redis.set(key, std::to_string(companyId));
 }
 
-std::string Storage::getEmployeesCompany(long long employeeId) {
-    std::string key = "Employee:" + std::to_string(employeeId) + ":companyName";
+long long Storage::getEmployeesCompany(long long employeeId) {
+    std::string key = "Employee:" + std::to_string(employeeId) + ":companyId";
     std::string response = redis.get(key).value();
-    return std::move(response);
+    return std::stoll(response);
 }
 
-std::string Storage::getOrdersCompany(long long orderId) {
-    std::string key = "Order:" + std::to_string(orderId) + ":companyName";
+long long Storage::getOrdersCompany(long long orderId) {
+    std::string key = "Order:" + std::to_string(orderId) + ":companyId";
     std::string response = redis.get(key).value();
-    return std::move(response);
+    return std::stoll(response);
 }
 
 void Storage::addOrderToEmployee(long long int employeeId,
