@@ -24,6 +24,7 @@ void Storage::storeEmployee(const Employee &employee) {
     nlohmann::json value;
     value["fullName"] = employee.fullName;
     redis.set(key, value.dump());
+    redis.set(key + ":companyId", std::to_string(employee.companyId));
 }
 
 void Storage::storeClient(const Client &client) {
@@ -44,6 +45,7 @@ void Storage::storeOrder(const Order &order) {
     value["clientId"] = order.clientId;
     value["employeeId"] = order.employeeId;
     redis.set(key, value.dump());
+    redis.set(key + ":companyId", std::to_string(order.companyId));
 }
 
 void Storage::storeSchedule(const Schedule &schedule, std::string &&prefix) {
@@ -73,6 +75,7 @@ Employee Storage::getEmployeeById(long long id) {
     std::string key = "Employee:" + std::to_string(id);
     nlohmann::json value = nlohmann::json::parse(redis.get(key).value());
     Employee employee(id);
+    employee.companyId = std::stoll(redis.get(key + ":companyId").value());
     employee.fullName = value["fullName"];
     return std::move(employee);
 }
@@ -89,6 +92,7 @@ Order Storage::getOrderById(long long id) {
     std::string key = "Order:" + std::to_string(id);
     nlohmann::json value = nlohmann::json::parse(redis.get(key).value());
     Order order(id);
+    order.companyId = std::stoll(redis.get(key + ":companyId").value());
     order.title = value["title"];
     order.timeStart = value["timeStart"];
     order.duration = value["duration"];
@@ -116,23 +120,13 @@ Company Storage::getCompanyById(long long int id) {
     return std::move(company);
 }
 
-void Storage::setEmployeesCompany(long long int employeeId, long long companyId) {
-    std::string key = "Employee:" + std::to_string(employeeId) + ":companyId";
-    redis.set(key, std::to_string(companyId));
-}
-
-void Storage::setOrdersCompany(long long int orderId, long long companyId) {
-    std::string key = "Order:" + std::to_string(orderId) + ":companyId";
-    redis.set(key, std::to_string(companyId));
-}
-
-long long Storage::getEmployeesCompany(long long employeeId) {
+long long Storage::getEmployeeOwner(long long employeeId) {
     std::string key = "Employee:" + std::to_string(employeeId) + ":companyId";
     std::string response = redis.get(key).value();
     return std::stoll(response);
 }
 
-long long Storage::getOrdersCompany(long long orderId) {
+long long Storage::getOrderOwner(long long orderId) {
     std::string key = "Order:" + std::to_string(orderId) + ":companyId";
     std::string response = redis.get(key).value();
     return std::stoll(response);

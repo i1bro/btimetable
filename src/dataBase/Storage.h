@@ -38,13 +38,9 @@ public:
 
     Company getCompanyById(long long id);
 
-    void setEmployeesCompany(long long employeeId, long long companyId);
+    long long getEmployeeOwner(long long employeeId);
 
-    void setOrdersCompany(long long orderId, long long companyId);
-
-    long long getEmployeesCompany(long long employeeId);
-
-    long long getOrdersCompany(long long orderId);
+    long long getOrderOwner(long long orderId);
 
     void addOrderToEmployee(long long employeeId, long long orderId);
 

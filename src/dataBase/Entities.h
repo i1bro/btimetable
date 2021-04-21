@@ -11,13 +11,14 @@ class Employee {
 private:
 public:
     const long long id = 0;
+    long long companyId = 0;
     std::string fullName;
 
     explicit Employee(long long id_) : id(id_) {
     }
 
-    Employee(long long id_, std::string fullName_)
-        : id(id_), fullName(std::move(fullName_)) {
+    Employee(long long id_, long long companyId_, std::string fullName_)
+        : id(id_), companyId(companyId_), fullName(std::move(fullName_)) {
     }
 };
 
@@ -41,6 +42,7 @@ class Order {
 private:
 public:
     const long long id = 0;
+    long long companyId = 0;
     std::string title;
     long long timeStart = -1;
     long long duration = -1;
@@ -51,12 +53,14 @@ public:
     }
 
     Order(long long id_,
+          long long companyId_,
           std::string title_,
           long long timeStart_,
           long long duration_,
           long long clientId_,
           long long employeeId_)
         : id(id_),
+          companyId(companyId_),
           title(std::move(title_)),
           timeStart(timeStart_),
           duration(duration_),
@@ -65,11 +69,13 @@ public:
     }
 
     Order(long long id_,
+          long long companyId_,
           std::string title_,
           long long timeStart_,
           long long duration_,
           long long employeeId_)
         : id(id_),
+          companyId(companyId_),
           title(std::move(title_)),
           timeStart(timeStart_),
           duration(duration_),

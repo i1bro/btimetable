@@ -13,9 +13,8 @@ Order Service::createOrder(long long companyId,
                            int timeStart,
                            int duration,
                            int employeeId) {
-    Order order(storage.giveOrderId(), std::move(title), timeStart, duration,
+    Order order(storage.giveOrderId(), companyId, std::move(title), timeStart, duration,
                 employeeId);
-    storage.setOrdersCompany(order.id, companyId);
     storage.addOrderToEmployee(employeeId, order.id);
     auto company = storage.getCompanyById(companyId);
     company.addVacantOrder(order.id);
@@ -30,9 +29,8 @@ Order Service::createOrder(long long companyId,
                            int duration,
                            int clientId,
                            int employeeId) {
-    Order order(storage.giveOrderId(), std::move(title), timeStart, duration,
+    Order order(storage.giveOrderId(), companyId, std::move(title), timeStart, duration,
                 clientId, employeeId);
-    storage.setOrdersCompany(order.id, companyId);
     storage.addOrderToEmployee(employeeId, order.id);
     storage.addOrderToClient(clientId, order.id);
     auto company = storage.getCompanyById(companyId);
@@ -44,8 +42,7 @@ Order Service::createOrder(long long companyId,
 
 Employee Service::createEmployee(long long companyId,
                                  std::string fullName) {
-    Employee employee(storage.giveEmployeeId(), std::move(fullName));
-    storage.setEmployeesCompany(employee.id, companyId);
+    Employee employee(storage.giveEmployeeId(), companyId, std::move(fullName));
     auto company = storage.getCompanyById(companyId);
     company.addEmployee(employee.id);
     storage.storeCompany(company);
@@ -108,7 +105,7 @@ Company Service::getCompanyById(long long id) {
 
 void Service::saveOrder(const Order &order) {
     auto oldOrder = storage.getOrderById(order.id);
-    auto company = storage.getCompanyById(storage.getOrdersCompany(order.id));
+    auto company = storage.getCompanyById(storage.getOrderOwner(order.id));
     company.deleteOrder(order.id);
     if (oldOrder.clientId != -1) {
         storage.deleteOrderOfClient(oldOrder.clientId, order.id);
