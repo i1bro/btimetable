@@ -1,9 +1,11 @@
 #include <iostream>
 #include "src/ModuleSelector.h"
+#include "src/dataBase/Service.h"
 
 int main() {
-    dataBase::TestDataBase testDataBase;
-    testDataBase.make();
-    ModuleSelector selector;
-    selector.selectModule(testDataBase);
+    dataBase::Service service;
+    //dataBase::TestDataBase testDataBase;
+    //testDataBase.make();
+    //ModuleSelector selector;
+    //selector.selectModule(testDataBase);
 }

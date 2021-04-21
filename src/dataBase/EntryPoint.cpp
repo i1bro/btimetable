@@ -1,13 +1,12 @@
-//
-// Created by Ilya on 10.02.2021.
-//
-
 #include "EntryPoint.h"
 #include "Entities.h"
+#include "Storage.h"
 #include "iostream"
 
 void EntryPoint::run() {
+    /*
     dataBase::Company test("test");
+    dataBase::Storage st;
     std::cout << "> ";
     while (!std::cin.eof()) {
         std::string command;
@@ -107,9 +106,13 @@ void EntryPoint::run() {
             std::cin >> id >> client_id;
             test.bookOrder(id, client_id);
         }
+        if (command == "store") {
+            st.storeCompany(test);
+        }
         if (command == "exit") {
             return;
         }
         std::cout << "> ";
     }
+     */
 }

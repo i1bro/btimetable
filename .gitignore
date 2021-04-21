@@ -47,4 +47,5 @@ btimetable.cbp
 btimetable
 
 /cmake-build-debug/
+/redis-plus-plus/compile/
 /.idea/

@@ -1,84 +1,66 @@
 #ifndef BTIMETABLE_ENTITIES_H
 #define BTIMETABLE_ENTITIES_H
 
-#include <iostream>
-#include <map>
-#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 namespace dataBase {
 
-template <typename T>
-class Holder {
-private:
-    std::map<int, std::shared_ptr<T>> idMap;
-    std::vector<std::shared_ptr<T>> elements;
-
-public:
-    Holder() = default;
-
-    void add(T value);
-
-    void addByPtr(std::shared_ptr<T> elementPtr);
-
-    std::shared_ptr<T> findById(int id);
-
-    [[nodiscard]] const std::vector<std::shared_ptr<T>> &listElements();
-
-    void removeById(int id);
-};
-
 class Employee {
 private:
 public:
-    const int id = 0;
+    const long long id = 0;
+    long long companyId = 0;
     std::string fullName;
 
-    Employee() = default;
-
-    Employee(int id_, std::string fullName_)
-        : id(id_), fullName(std::move(fullName_)) {
+    explicit Employee(long long id_) : id(id_) {
     }
 
-    void stdPrint() const;
+    Employee(long long id_, long long companyId_, std::string fullName_)
+        : id(id_), companyId(companyId_), fullName(std::move(fullName_)) {
+    }
 };
 
 class Client {
 private:
 public:
-    const int id = 0;
+    const long long id = 0;
     std::string fullName;
+    std::string phoneNumber;
+    std::string email;
 
-    Client() = default;
-
-    Client(int id_, std::string fullName_)
-        : id(id_), fullName(std::move(fullName_)) {
+    explicit Client(long long id_) : id(id_) {
     }
 
-    void stdPrint() const;
+    Client(long long id_, std::string fullName_, std::string phoneNumber_, std::string email_)
+        : id(id_), fullName(std::move(fullName_)), phoneNumber(std::move(phoneNumber_)), email(std::move(email_)) {
+    }
 };
 
 class Order {
 private:
 public:
-    const int id = 0;
+    const long long id = 0;
+    long long companyId = 0;
     std::string title;
-    int timeStart = 0;
-    int duration = 0;
-    int clientId = -1;
-    int employeeId = -1;
+    long long timeStart = -1;
+    long long duration = -1;
+    long long clientId = -1;
+    long long employeeId = -1;
 
-    Order() = default;
+    explicit Order(long long id_) : id(id_) {
+    }
 
-    Order(int id_,
+    Order(long long id_,
+          long long companyId_,
           std::string title_,
-          int timeStart_,
-          int duration_,
-          int clientId_,
-          int employeeId_)
+          long long timeStart_,
+          long long duration_,
+          long long clientId_,
+          long long employeeId_)
         : id(id_),
+          companyId(companyId_),
           title(std::move(title_)),
           timeStart(timeStart_),
           duration(duration_),
@@ -86,99 +68,32 @@ public:
           employeeId(employeeId_) {
     }
 
-    Order(int id_,
+    Order(long long id_,
+          long long companyId_,
           std::string title_,
-          int timeStart_,
-          int duration_,
-          int employeeId_)
+          long long timeStart_,
+          long long duration_,
+          long long employeeId_)
         : id(id_),
+          companyId(companyId_),
           title(std::move(title_)),
           timeStart(timeStart_),
           duration(duration_),
           employeeId(employeeId_) {
     }
-
-    void stdPrint() const;
-};
-
-class Schedule {
-private:
-    Holder<Order> vacantOrders;
-    Holder<Order> bookedOrders;
-
-public:
-    Schedule() = default;
-
-    void addOrder(int id,
-                  std::string title,
-                  int timeStart,
-                  int duration,
-                  int employeeId);
-
-    std::shared_ptr<Order> findOrder(int id);
-
-    [[nodiscard]] const std::vector<std::shared_ptr<Order>> &listVacantOrders();
-
-    [[nodiscard]] const std::vector<std::shared_ptr<Order>> &listBookedOrders();
-
-    void bookOrder(int id, int clientId);
-
-    void deleteOrder(int id);
 };
 
 class Company {
 private:
-    Holder<Employee> employees;
-    Holder<Client> clients;
-    Schedule schedule;
-    int lastEmployeeId = 0;
-    int lastClientId = 0;
-    int lastOrderId = 0;
-
 public:
+    const long long id = 0;
     std::string name;
 
-    Company() = default;
-
-    explicit Company(std::string name_) : name(std::move(name_)) {
+    explicit Company(long long id_) : id(id_) {
     }
 
-    void addEmployee(std::string fullName);
-
-    std::shared_ptr<Employee> findEmployee(int id);
-
-    [[nodiscard]] const std::vector<std::shared_ptr<Employee>> &listEmployees();
-
-    void deleteEmployee(int id);
-
-    void addClient(std::string fullName);
-
-    std::shared_ptr<Client> findClient(int id);
-
-    [[nodiscard]] const std::vector<std::shared_ptr<Client>> &listClients();
-
-    void deleteClient(int id);
-
-    void addOrder(std::string title,
-                  int timeStart,
-                  int duration,
-                  int employeeId);
-
-    std::shared_ptr<Order> findOrder(int id);
-
-    [[nodiscard]] const std::vector<std::shared_ptr<Order>> &listVacantOrders();
-
-    [[nodiscard]] const std::vector<std::shared_ptr<Order>> &listBookedOrders();
-
-    void bookOrder(int id, int clientId);
-
-    void deleteOrder(int id);
-
-    [[nodiscard]] int getLastEmployeeId() const;
-
-    [[nodiscard]] int getLastClientId() const;
-
-    [[nodiscard]] int getLastOrderId() const;
+    explicit Company(long long id_, std::string name_) : id(id_), name(std::move(name_)) {
+    }
 };
 
 }  // namespace dataBase

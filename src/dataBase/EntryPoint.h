@@ -1,7 +1,3 @@
-//
-// Created by Ilya on 10.02.2021.
-//
-
 #ifndef BTIMETABLE_ENTRYPOINT_H
 #define BTIMETABLE_ENTRYPOINT_H
 
