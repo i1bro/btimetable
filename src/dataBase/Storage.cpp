@@ -25,6 +25,7 @@ void Storage::storeEmployee(const Employee &employee) {
     value["fullName"] = employee.fullName;
     redis.set(key, value.dump());
     redis.set(key + ":companyId", std::to_string(employee.companyId));
+    redis.sadd("Company:" + std::to_string(employee.companyId) + ":employees", std::to_string(employee.id));
 }
 
 void Storage::storeClient(const Client &client) {
@@ -46,28 +47,24 @@ void Storage::storeOrder(const Order &order) {
     value["employeeId"] = order.employeeId;
     redis.set(key, value.dump());
     redis.set(key + ":companyId", std::to_string(order.companyId));
-}
-
-void Storage::storeSchedule(const Schedule &schedule, std::string &&prefix) {
-    std::string key = prefix + "schedule";
-    nlohmann::json value;
-    for (auto i : schedule.listVacantOrders()) {
-        value["vacantOrders"].push_back(i);
+    if(order.employeeId == -1) {
+        redis.sadd("Company:" + std::to_string(order.companyId) + ":vacantOrders", std::to_string(order.id));
+        redis.sadd("Employee:" + std::to_string(order.employeeId) + ":vacantOrders", std::to_string(order.id));
+        redis.srem("Company:" + std::to_string(order.companyId) + ":bookedOrders", std::to_string(order.id));
+        redis.srem("Employee:" + std::to_string(order.employeeId) + ":bookedOrders", std::to_string(order.id));
+    } else {
+        redis.sadd("Client:" + std::to_string(order.clientId) + ":orders", std::to_string(order.id));
+        redis.sadd("Company:" + std::to_string(order.companyId) + ":bookedOrders", std::to_string(order.id));
+        redis.sadd("Employee:" + std::to_string(order.employeeId) + ":bookedOrders", std::to_string(order.id));
+        redis.srem("Company:" + std::to_string(order.companyId) + ":vacantOrders", std::to_string(order.id));
+        redis.srem("Employee:" + std::to_string(order.employeeId) + ":vacantOrders", std::to_string(order.id));
     }
-    for (auto i : schedule.listBookedOrders()) {
-        value["bookedOrders"].push_back(i);
-    }
-    redis.set(key, value.dump());
 }
 
 void Storage::storeCompany(const Company &company) {
     std::string key = "Company:" + std::to_string(company.id);
     nlohmann::json value;
     value["name"] = company.name;
-    for (auto i : company.listEmployees()) {
-        value["employees"].push_back(i);
-    }
-    storeSchedule(company.getSchedule(), key + ":");
     redis.set(key, value.dump());
 }
 
@@ -101,23 +98,33 @@ Order Storage::getOrderById(long long id) {
     return std::move(order);
 }
 
-Company Storage::getCompanyById(long long int id) {
+Company Storage::getCompanyById(long long id) {
     std::string key = "Company:" + std::to_string(id);
     nlohmann::json value = nlohmann::json::parse(redis.get(key).value());
-    nlohmann::json schedule =
-        nlohmann::json::parse(redis.get(key + ":schedule").value());
     Company company(id);
     company.name = value["name"];
-    for (long long i : value["employees"]) {
-        company.addEmployee(i);
-    }
-    for (long long i : schedule["vacantOrders"]) {
-        company.addVacantOrder(i);
-    }
-    for (long long i : schedule["bookedOrders"]) {
-        company.addBookedOrder(i);
-    }
     return std::move(company);
+}
+
+void Storage::deleteEmployee(long long id) {
+    /*std::string key = "Employee:" + std::to_string(id);
+    redis.del(key);
+    std::string companyId = redis.get(key + ":companyId").value();
+    redis.del(key + ":companyId");
+    redis.srem("Company:" + companyId + ":employees", std::to_string(id));*/
+    //TODO
+}
+
+void Storage::deleteClient(long long id) {
+    //TODO
+}
+
+void Storage::deleteOrder(long long id) {
+    //TODO
+}
+
+void Storage::deleteCompany(long long id) {
+    //TODO
 }
 
 long long Storage::getEmployeeOwner(long long employeeId) {
@@ -132,41 +139,64 @@ long long Storage::getOrderOwner(long long orderId) {
     return std::stoll(response);
 }
 
-void Storage::addOrderToEmployee(long long int employeeId,
-                                 long long int orderId) {
-    std::string key = "Employee:" + std::to_string(employeeId) + ":orders";
-    redis.sadd(key, std::to_string(orderId));
-}
-
-void Storage::addOrderToClient(long long int clientId, long long int orderId) {
-    std::string key = "Client:" + std::to_string(clientId) + ":orders";
-    redis.sadd(key, std::to_string(orderId));
-}
-
-void Storage::deleteOrderOfEmployee(long long int employeeId,
-                                    long long int orderId) {
-    std::string key = "Employee:" + std::to_string(employeeId) + ":orders";
-    redis.srem(key, std::to_string(orderId));
-}
-
-void Storage::deleteOrderOfClient(long long int clientId,
-                                  long long int orderId) {
+void Storage::deleteOrderOfClient(long long int clientId, long long int orderId) {
     std::string key = "Client:" + std::to_string(clientId) + ":orders";
     redis.srem(key, std::to_string(orderId));
 }
 
-std::vector<long long> Storage::listOrdersOfEmployee(long long int employeeId) {
-    std::string key = "Employee:" + std::to_string(employeeId) + ":orders";
-    std::vector<long long> response;
+std::vector<long long> Storage::listVacantOrdersOfCompany(long long employeeId) {
+    std::string key = "Company:" + std::to_string(employeeId) + ":vacantOrders";
+    std::vector<std::string> response;
     redis.smembers(key, std::inserter(response, response.begin()));
-    return std::move(response);
+    std::vector<long long> ans;
+    for(auto &i: response) {
+        ans.push_back(stoll(i));
+    }
+    return std::move(ans);
+}
+
+std::vector<long long> Storage::listBookedOrdersOfCompany(long long employeeId) {
+    std::string key = "Company:" + std::to_string(employeeId) + ":bookedOrders";
+    std::vector<std::string> response;
+    redis.smembers(key, std::inserter(response, response.begin()));
+    std::vector<long long> ans;
+    for(auto &i: response) {
+        ans.push_back(stoll(i));
+    }
+    return std::move(ans);
+}
+
+std::vector<long long> Storage::listVacantOrdersOfEmployee(long long employeeId) {
+    std::string key = "Employee:" + std::to_string(employeeId) + ":vacantOrders";
+    std::vector<std::string> response;
+    redis.smembers(key, std::inserter(response, response.begin()));
+    std::vector<long long> ans;
+    for(auto &i: response) {
+        ans.push_back(stoll(i));
+    }
+    return std::move(ans);
+}
+
+std::vector<long long> Storage::listBookedOrdersOfEmployee(long long employeeId) {
+    std::string key = "Employee:" + std::to_string(employeeId) + ":bookedOrders";
+    std::vector<std::string> response;
+    redis.smembers(key, std::inserter(response, response.begin()));
+    std::vector<long long> ans;
+    for(auto &i: response) {
+        ans.push_back(stoll(i));
+    }
+    return std::move(ans);
 }
 
 std::vector<long long> Storage::listOrdersOfClient(long long int clientId) {
     std::string key = "Client:" + std::to_string(clientId) + ":orders";
-    std::vector<long long> response;
+    std::vector<std::string> response;
     redis.smembers(key, std::inserter(response, response.begin()));
-    return std::move(response);
+    std::vector<long long> ans;
+    for(auto &i: response) {
+        ans.push_back(stoll(i));
+    }
+    return std::move(ans);
 }
 
 }  // namespace dataBase

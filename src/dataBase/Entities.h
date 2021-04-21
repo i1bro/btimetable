@@ -83,30 +83,8 @@ public:
     }
 };
 
-class Schedule {
-private:
-    std::vector<long long> vacantOrders;
-    std::vector<long long> bookedOrders;
-
-public:
-    Schedule() = default;
-
-    void addVacantOrder(long long id);
-
-    void addBookedOrder(long long id);
-
-    [[nodiscard]] const std::vector<long long> &listVacantOrders() const;
-
-    [[nodiscard]] const std::vector<long long> &listBookedOrders() const;
-
-    void deleteOrder(long long id);
-};
-
 class Company {
 private:
-    std::vector<long long> employees;
-    Schedule schedule;
-
 public:
     const long long id = 0;
     std::string name;
@@ -116,24 +94,6 @@ public:
 
     explicit Company(long long id_, std::string name_) : id(id_), name(std::move(name_)) {
     }
-
-    void addEmployee(long long id);
-
-    [[nodiscard]] const std::vector<long long> &listEmployees() const;
-
-    void deleteEmployee(long long id);
-
-    void addVacantOrder(long long id);
-
-    void addBookedOrder(long long id);
-
-    [[nodiscard]] const std::vector<long long> &listVacantOrders() const;
-
-    [[nodiscard]] const std::vector<long long> &listBookedOrders() const;
-
-    void deleteOrder(long long id);
-
-    [[nodiscard]] const Schedule &getSchedule() const;
 };
 
 }  // namespace dataBase

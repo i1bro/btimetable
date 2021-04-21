@@ -3,9 +3,10 @@
 
 namespace dataBase {
 
-void Service::createCompany(std::string name) {
+Company Service::createCompany(std::string name) {
     Company company(storage.giveCompanyId(), std::move(name));
     storage.storeCompany(company);
+    return std::move(company);
 }
 
 Order Service::createOrder(long long companyId,
@@ -15,10 +16,6 @@ Order Service::createOrder(long long companyId,
                            int employeeId) {
     Order order(storage.giveOrderId(), companyId, std::move(title), timeStart, duration,
                 employeeId);
-    storage.addOrderToEmployee(employeeId, order.id);
-    auto company = storage.getCompanyById(companyId);
-    company.addVacantOrder(order.id);
-    storage.storeCompany(company);
     storage.storeOrder(order);
     return std::move(order);
 }
@@ -31,21 +28,12 @@ Order Service::createOrder(long long companyId,
                            int employeeId) {
     Order order(storage.giveOrderId(), companyId, std::move(title), timeStart, duration,
                 clientId, employeeId);
-    storage.addOrderToEmployee(employeeId, order.id);
-    storage.addOrderToClient(clientId, order.id);
-    auto company = storage.getCompanyById(companyId);
-    company.addBookedOrder(order.id);
-    storage.storeCompany(company);
     storage.storeOrder(order);
     return std::move(order);
 }
 
-Employee Service::createEmployee(long long companyId,
-                                 std::string fullName) {
+Employee Service::createEmployee(long long companyId, std::string fullName) {
     Employee employee(storage.giveEmployeeId(), companyId, std::move(fullName));
-    auto company = storage.getCompanyById(companyId);
-    company.addEmployee(employee.id);
-    storage.storeCompany(company);
     storage.storeEmployee(employee);
     return std::move(employee);
 }
@@ -56,35 +44,20 @@ Client Service::createClient(std::string fullName, std::string phoneNumber, std:
     return std::move(client);
 }
 
-std::vector<long long> Service::listVacantOrders(long long companyId) {
-    auto company = storage.getCompanyById(companyId);
-    return company.listVacantOrders();
+std::vector<long long> Service::listVacantOrdersOfCompany(long long id) {
+    std::move(storage.listVacantOrdersOfCompany(id));
 }
 
-std::vector<long long> Service::listBookedOrders(long long companyId) {
-    auto company = storage.getCompanyById(companyId);
-    return company.listBookedOrders();
+std::vector<long long> Service::listBookedOrdersOfCompany(long long id) {
+    std::move(storage.listBookedOrdersOfCompany(id));
 }
 
-std::vector<long long> Service::listAllOrders(long long companyId) {
-    auto company = storage.getCompanyById(companyId);
-    auto response = company.listVacantOrders();
-    for (auto i : company.listBookedOrders()) {
+std::vector<long long> Service::listAllOrdersOfCompany(long long id) {
+    auto response = storage.listVacantOrdersOfCompany(id);
+    for (auto i : storage.listBookedOrdersOfCompany(id)) {
         response.push_back(i);
     }
     return std::move(response);
-}
-
-void Service::deleteOrder(long long companyId, long long orderId) {
-    auto company = storage.getCompanyById(companyId);
-    company.deleteOrder(orderId);
-    storage.storeCompany(company);
-}
-
-void Service::deleteEmployee(long long companyId, long long employeeId) {
-    auto company = storage.getCompanyById(companyId);
-    company.deleteEmployee(employeeId);
-    storage.storeCompany(company);
 }
 
 Order Service::getOrderById(long long id) {
@@ -105,20 +78,9 @@ Company Service::getCompanyById(long long id) {
 
 void Service::saveOrder(const Order &order) {
     auto oldOrder = storage.getOrderById(order.id);
-    auto company = storage.getCompanyById(storage.getOrderOwner(order.id));
-    company.deleteOrder(order.id);
     if (oldOrder.clientId != -1) {
         storage.deleteOrderOfClient(oldOrder.clientId, order.id);
     }
-    storage.deleteOrderOfEmployee(oldOrder.employeeId, order.id);
-    if (order.clientId != -1) {
-        storage.addOrderToClient(order.clientId, order.id);
-        company.addBookedOrder(order.id);
-    } else {
-        company.addVacantOrder(order.id);
-    }
-    storage.addOrderToEmployee(order.employeeId, order.id);
-    storage.storeCompany(company);
     storage.storeOrder(order);
 }
 
@@ -134,11 +96,23 @@ void Service::saveCompany(const Company &company) {
     storage.storeCompany(company);
 }
 
-std::vector<long long> Service::listOrdersOfEmployee(long long int employeeId) {
-    return std::move(storage.listOrdersOfEmployee(employeeId));
+std::vector<long long> Service::listVacantOrdersOfEmployee(long long id) {
+    return std::move(storage.listVacantOrdersOfEmployee(id));
 }
 
-std::vector<long long> Service::listOrdersOfClient(long long int clientId) {
-    return std::move(storage.listOrdersOfClient(clientId));
+std::vector<long long> Service::listBookedOrdersOfEmployee(long long id) {
+    return std::move(storage.listBookedOrdersOfEmployee(id));
+}
+
+std::vector<long long> Service::listAllOrdersOfEmployee(long long id) {
+    auto response = storage.listVacantOrdersOfEmployee(id);
+    for (auto i : storage.listBookedOrdersOfEmployee(id)) {
+        response.push_back(i);
+    }
+    return std::move(response);
+}
+
+std::vector<long long> Service::listOrdersOfClient(long long id) {
+    return std::move(storage.listOrdersOfClient(id));
 }
 }  // namespace dataBase

@@ -10,7 +10,6 @@ class Storage {
 private:
     sw::redis::Redis redis = sw::redis::Redis("tcp://127.0.0.1:6379");
 
-    void storeSchedule(const Schedule &schedule, std::string &&prefix = "");
 public:
     Storage() = default;
 
@@ -38,19 +37,27 @@ public:
 
     Company getCompanyById(long long id);
 
+    void deleteEmployee(long long id);
+
+    void deleteClient(long long id);
+
+    void deleteOrder(long long id);
+
+    void deleteCompany(long long id);
+
     long long getEmployeeOwner(long long employeeId);
 
     long long getOrderOwner(long long orderId);
 
-    void addOrderToEmployee(long long employeeId, long long orderId);
-
-    void addOrderToClient(long long clientId, long long orderId);
-
-    void deleteOrderOfEmployee(long long employeeId, long long orderId);
-
     void deleteOrderOfClient(long long clientId, long long orderId);
 
-    std::vector<long long> listOrdersOfEmployee(long long employeeId);
+    std::vector<long long> listVacantOrdersOfCompany(long long employeeId);
+
+    std::vector<long long> listBookedOrdersOfCompany(long long employeeId);
+
+    std::vector<long long> listVacantOrdersOfEmployee(long long employeeId);
+
+    std::vector<long long> listBookedOrdersOfEmployee(long long employeeId);
 
     std::vector<long long> listOrdersOfClient(long long clientId);
 };

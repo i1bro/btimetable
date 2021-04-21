@@ -10,18 +10,10 @@ class Service {
 private:
     Storage storage;
 
-    void saveOrder(const Order &order);
-
-    void saveEmployee(const Employee &employee);
-
-    void saveClient(const Client &client);
-
-    void saveCompany(const Company &company);
-
 public:
     Service() = default;
 
-    void createCompany(std::string name);
+    Company createCompany(std::string name);
 
     Order createOrder(long long companyId,
                       std::string title,
@@ -40,15 +32,19 @@ public:
 
     Client createClient(std::string fullName, std::string phoneNumber, std::string email);
 
-    std::vector<long long> listVacantOrders(long long companyId);
+    std::vector<long long> listVacantOrdersOfCompany(long long id);
 
-    std::vector<long long> listBookedOrders(long long companyId);
+    std::vector<long long> listBookedOrdersOfCompany(long long id);
 
-    std::vector<long long> listAllOrders(long long companyId);
+    std::vector<long long> listAllOrdersOfCompany(long long id);
 
-    void deleteOrder(long long companyId, long long orderId);
+    void saveOrder(const Order &order);
 
-    void deleteEmployee(long long companyId, long long employeeId);
+    void saveEmployee(const Employee &employee);
+
+    void saveClient(const Client &client);
+
+    void saveCompany(const Company &company);
 
     Order getOrderById(long long id);
 
@@ -58,9 +54,17 @@ public:
 
     Company getCompanyById(long long id);
 
-    std::vector<long long> listOrdersOfEmployee(long long employeeId);
+    //void deleteOrder(long long Id);
 
-    std::vector<long long> listOrdersOfClient(long long clientId);
+    //void deleteEmployee(long long Id);
+
+    std::vector<long long> listVacantOrdersOfEmployee(long long id);
+
+    std::vector<long long> listBookedOrdersOfEmployee(long long id);
+
+    std::vector<long long> listAllOrdersOfEmployee(long long id);
+
+    std::vector<long long> listOrdersOfClient(long long id);
 };
 
 }  // namespace dataBase
