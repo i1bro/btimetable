@@ -82,6 +82,8 @@ Client Storage::getClientById(long long id) {
     nlohmann::json value = nlohmann::json::parse(redis.get(key).value());
     Client client(id);
     client.fullName = value["fullName"];
+    client.phoneNumber = value["phoneNumber"];
+    client.email = value["email"];
     return std::move(client);
 }
 

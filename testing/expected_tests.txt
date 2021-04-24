@@ -1,0 +1,36 @@
+createClient + getClientById
+createClient + change + getClientById
+...
+...
+createClient + listOrdersOfClient
+listCompanies + listVacantOrdersOfCompany + getOrderById
+listCompanies + listEmployeesOfCompany + listVacantOrdersOfEmployee + getOrderById
+listCompanies + listVacantOrdersOfCompany + bookOrder
+ + listOrdersOfClient + listVacantOrdersOfCompany
+listCompanies + listEmployeesOfCompany + listVacantOrdersOfEmployee
+ + bookOrder + listOrdersOfClient + listVacantOrdersOfCompany + listVacantOrdersOfEmployee
+listOrdersOfClient + getOrderById
+listOrdersOfClient + cancelOrder + getOrderById + listOrdersOfClient
+ + listVacantOrdersOfCompany + listVacantOrdersOfEmployee
+bookOrder + bookOrder(the same one)
+
+Wrong ids:
+getClientById
+getOrderById
+getEmployeeById
+getCompanyById
+... for every function
+
+createEmployee + getEmployeeById
+createOrder + getOrderById
+createCompany + getCompanyById
+
+saveEmployee + getEmployeeById
+saveOrder + getOrderById
+saveCompany + getCompanyById
+
+8-15 + listBookedOrders
+
+
+
+
