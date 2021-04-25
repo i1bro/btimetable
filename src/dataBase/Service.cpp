@@ -45,11 +45,11 @@ Client Service::createClient(std::string fullName, std::string phoneNumber, std:
 }
 
 std::vector<long long> Service::listVacantOrdersOfCompany(long long id) {
-    std::move(storage.listVacantOrdersOfCompany(id));
+    return std::move(storage.listVacantOrdersOfCompany(id));
 }
 
 std::vector<long long> Service::listBookedOrdersOfCompany(long long id) {
-    std::move(storage.listBookedOrdersOfCompany(id));
+    return std::move(storage.listBookedOrdersOfCompany(id));
 }
 
 std::vector<long long> Service::listAllOrdersOfCompany(long long id) {
