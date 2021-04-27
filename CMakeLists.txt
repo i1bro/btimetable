@@ -9,17 +9,16 @@ add_library(redis++ STATIC IMPORTED)
 set_target_properties(redis++ PROPERTIES IMPORTED_LOCATION ../lib/libredis++.a)
 
 add_executable(btimetable main.cpp
-        include/ClientAPI.h
-        include/CompanyAPI.h
-        include/Entities.h
+        src/ClientAPI.cpp
+        src/CompanyAPI.cpp
         src/Storage.cpp
         src/Service.cpp)
 
 add_library(btt STATIC
-        include/ClientAPI.h
-        include/CompanyAPI.h
-        include/Entities.h
-        src/Service.cpp)
+        src/ClientAPI.cpp
+        src/CompanyAPI.cpp
+        src/Service.cpp
+        src/Storage.cpp)
 
 target_link_libraries(btimetable PRIVATE hiredis)
 target_link_libraries(btimetable PRIVATE redis++)
