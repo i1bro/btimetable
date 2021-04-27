@@ -1,6 +1,9 @@
 #ifndef BTIMETABLE_COMPANYAPI_H
 #define BTIMETABLE_COMPANYAPI_H
 
+#include "Entities.h"
+
+namespace dataBase {
 class CompanyAPI {
 public:
     void createCompany(std::string name);
@@ -35,5 +38,6 @@ public:
 
     std::vector<long long> listOrdersOfEmployee(long long id);
 };
+}
 
 #endif //BTIMETABLE_COMPANYAPI_H
