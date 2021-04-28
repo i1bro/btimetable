@@ -2,6 +2,19 @@ TEST	createClient + getClientById
 Создать клиента client = createClient(std::string fullName, std::string phoneNumber, std::string email).
 Проверить, что getClientById(client.id) возвращает клиента с введенными параметрами.
 
+TEST	createEmployee + getEmployeeById
+Создать работника employee = createEmployee(long long companyId, std::string fullName).
+Проверить, что getEmployeeById(employee.id) возвращает работнка с введенными параметрами.
+
+TEST	createCompany + getCompanyById
+Создать клиента company = createCompany(std::string name).
+Проверить, что listCompanies() содержит ее, запомнить id.
+Проверить, что getCompanyById(company.id) возвращает компанию с введенными параметрами.
+
+TEST	createOrder + getOrderById
+Создать заказ order = createOrder(long long companyId, std::string title, int timeStart, int duration, int employeeId)..
+Проверить, что getOrderById(order.id) возвращает заказ с введенными параметрами.
+
 TEST	createClient + change + getClientById
 Изменить имя changeClientFullName(long long id, std::string fullName).
 С помощью getClientById(long long id) проверить, что изменилось только имя.
@@ -25,29 +38,28 @@ TEST 	listCompanies + listVacantOrdersOfCompany + getOrderById
 TEST 	listCompanies + listEmployeesOfCompany + listVacantOrdersOfEmployee + getOrderById
 Пройтись по всем компаниям listCompanies(), по всем работникам listEmployeesOfCompany // TODO: что это?
 Проверить, что listOrdersOfEmployee(long long id) // TODO: listOrdersOfEmployee и listVacantOrdersOfEmployee различны?
-возвращает вектор заказов работника, проверить с помощью getOrderById, что заказы соответствуют действительности.
+возвращает вектор заказов работника, проверить с помощью getOrderById(long long id), что заказы соответствуют действительности.
 
 TEST 	listCompanies + listVacantOrdersOfCompany + bookOrder + listOrdersOfClient 
 Проверить, что заказ есть в списках listVacantOrdersOfCompany(long long id), listOrdersOfEmployee(long long id).
 Забуковать его bookOrder(long long orderId, long long clientId).
 Проверить, что он пропал из списков listVacantOrdersOfCompany(long long id), listOrdersOfEmployee(long long id).
-Проверить, что он появился в списке listOrdersOfClient(long long id).
+Проверить, что он появился в списках listOrdersOfClient(long long id), listBookedOrders(long long companyId).
 
 TEST 	listOrdersOfClient + getOrderById
 listOrdersOfClient + cancelOrder + getOrderById + listOrdersOfClient
  + listVacantOrdersOfCompany + listVacantOrdersOfEmployee
-bookOrder + bookOrder(the same one)
+Отменить бронирование cancelOrder(long long orderId).
+Проверить, что заказ появился в списках listVacantOrdersOfCompany(long long id), listOrdersOfEmployee(long long id).
+Проверить, что он пропал из списков listOrdersOfClient(long long id), listBookedOrders(long long companyId).
 
-Wrong ids:
-getClientById
-getOrderById
-getEmployeeById
-getCompanyById
-... for every function
+TEST 	bookOrder + bookOrder(the same one)
+Дважды забуковать один и тот же заказ bookOrder(long long orderId, long long clientId).
+Проверить с помощью getOrderById(long long id), что заказу присовилось id первого клиента.
+При втором bookOrder(long long orderId, long long clientId) должна выводиться ошибка.
 
-createEmployee + getEmployeeById
-createOrder + getOrderById
-createCompany + getCompanyById
+TEST	Wrong ids:
+Проверить, что getClientById(long long id), getOrderById(long long id), getEmployeeById(long long id), getCompanyById (long long id) по несуществующим id возвращают nullptr (или выводят ошибку).
 
 saveEmployee + getEmployeeById
 saveOrder + getOrderById
