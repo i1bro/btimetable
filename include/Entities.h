@@ -33,8 +33,14 @@ public:
     explicit Client(long long id_) : id(id_) {
     }
 
-    Client(long long id_, std::string fullName_, std::string phoneNumber_, std::string email_)
-        : id(id_), fullName(std::move(fullName_)), phoneNumber(std::move(phoneNumber_)), email(std::move(email_)) {
+    Client(long long id_,
+           std::string fullName_,
+           std::string phoneNumber_,
+           std::string email_)
+        : id(id_),
+          fullName(std::move(fullName_)),
+          phoneNumber(std::move(phoneNumber_)),
+          email(std::move(email_)) {
     }
 };
 
@@ -92,7 +98,8 @@ public:
     explicit Company(long long id_) : id(id_) {
     }
 
-    explicit Company(long long id_, std::string name_) : id(id_), name(std::move(name_)) {
+    explicit Company(long long id_, std::string name_)
+        : id(id_), name(std::move(name_)) {
     }
 };
 

@@ -4,8 +4,10 @@ project(btimetable)
 set(CMAKE_CXX_STANDARD 20)
 
 add_library(hiredis STATIC IMPORTED)
+#set_target_properties(hiredis PROPERTIES IMPORTED_LOCATION ../../../lib/hiredis_static.lib)
 set_target_properties(hiredis PROPERTIES IMPORTED_LOCATION ../lib/libhiredis.a)
 add_library(redis++ STATIC IMPORTED)
+#set_target_properties(redis++ PROPERTIES IMPORTED_LOCATION ../../../lib/redis++_static.lib)
 set_target_properties(redis++ PROPERTIES IMPORTED_LOCATION ../lib/libredis++.a)
 
 add_executable(btimetable main.cpp

@@ -16,21 +16,23 @@ public:
     static Company createCompany(std::string name);
 
     static Order createOrder(long long companyId,
-                      std::string title,
-                      int timeStart,
-                      int duration,
-                      int employeeId);
+                             std::string title,
+                             int timeStart,
+                             int duration,
+                             int employeeId);
 
     static Order createOrder(long long companyId,
-                      std::string title,
-                      int timeStart,
-                      int duration,
-                      int clientId,
-                      int employeeId);
+                             std::string title,
+                             int timeStart,
+                             int duration,
+                             int clientId,
+                             int employeeId);
 
     static Employee createEmployee(long long companyId, std::string fullName);
 
-    static Client createClient(std::string fullName, std::string phoneNumber, std::string email);
+    static Client createClient(std::string fullName,
+                               std::string phoneNumber,
+                               std::string email);
 
     static std::vector<long long> listVacantOrdersOfCompany(long long id);
 
@@ -54,9 +56,9 @@ public:
 
     static Company getCompanyById(long long id);
 
-    //void deleteOrder(long long Id);
+    // void deleteOrder(long long Id);
 
-    //void deleteEmployee(long long Id);
+    // void deleteEmployee(long long Id);
 
     static std::vector<long long> listVacantOrdersOfEmployee(long long id);
 
@@ -65,6 +67,10 @@ public:
     static std::vector<long long> listAllOrdersOfEmployee(long long id);
 
     static std::vector<long long> listOrdersOfClient(long long id);
+
+    static std::vector<long long> listCompanies();
+
+    static std::vector<long long> listEmployeesOfCompany(long long id);
 };
 
 }  // namespace dataBase
