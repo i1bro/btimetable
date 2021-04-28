@@ -1,15 +1,39 @@
-createClient + getClientById
-createClient + change + getClientById
-...
-...
-createClient + listOrdersOfClient
-listCompanies + listVacantOrdersOfCompany + getOrderById
-listCompanies + listEmployeesOfCompany + listVacantOrdersOfEmployee + getOrderById
-listCompanies + listVacantOrdersOfCompany + bookOrder
- + listOrdersOfClient + listVacantOrdersOfCompany
-listCompanies + listEmployeesOfCompany + listVacantOrdersOfEmployee
- + bookOrder + listOrdersOfClient + listVacantOrdersOfCompany + listVacantOrdersOfEmployee
-listOrdersOfClient + getOrderById
+TEST	createClient + getClientById
+Создать клиента client = createClient(std::string fullName, std::string phoneNumber, std::string email).
+Проверить, что getClientById(client.id) возвращает клиента с введенными параметрами.
+
+TEST	createClient + change + getClientById
+Изменить имя changeClientFullName(long long id, std::string fullName).
+С помощью getClientById(long long id) проверить, что изменилось только имя.
+Изменить номер телефона changeClientPhoneNumber(long long id, std::string phoneNumber).
+Проверить, что по этому id изменился только номер телефона.
+Изменить email changeClientEmail(long long id, std::string email).
+Проверить, что изменился только email.
+
+TEST	createClient + listOrdersOfClient
+Проверить, что listOrdersOfClient(client.id) возвращает пустой вектор.
+
+TEST 	listCompanies + listVacantOrdersOfCompany + getOrderById
+Создать компанию createCompany(std::string name).
+Проверить, что listCompanies() содержит ее, запомнить id.
+Создать работника createEmployee(long long companyId, std::string fullName). // TODO: как получить companyId, если createCompany возвращает void?
+Создать заказ order = createOrder(long long companyId, std::string title, int timeStart, int duration, int employeeId).
+Проверить, что listVacantOrders(long long companyId) не пуст и содержит созданный заказ.
+Проверить, что getOrderById(long long id) возвращает созданный заказ.
+Создать и добавить еще 2-3 заказа, проверить, что listVacantOrders(long long companyId) их содержит.
+
+TEST 	listCompanies + listEmployeesOfCompany + listVacantOrdersOfEmployee + getOrderById
+Пройтись по всем компаниям listCompanies(), по всем работникам listEmployeesOfCompany // TODO: что это?
+Проверить, что listOrdersOfEmployee(long long id) // TODO: listOrdersOfEmployee и listVacantOrdersOfEmployee различны?
+возвращает вектор заказов работника, проверить с помощью getOrderById, что заказы соответствуют действительности.
+
+TEST 	listCompanies + listVacantOrdersOfCompany + bookOrder + listOrdersOfClient 
+Проверить, что заказ есть в списках listVacantOrdersOfCompany(long long id), listOrdersOfEmployee(long long id).
+Забуковать его bookOrder(long long orderId, long long clientId).
+Проверить, что он пропал из списков listVacantOrdersOfCompany(long long id), listOrdersOfEmployee(long long id).
+Проверить, что он появился в списке listOrdersOfClient(long long id).
+
+TEST 	listOrdersOfClient + getOrderById
 listOrdersOfClient + cancelOrder + getOrderById + listOrdersOfClient
  + listVacantOrdersOfCompany + listVacantOrdersOfEmployee
 bookOrder + bookOrder(the same one)
