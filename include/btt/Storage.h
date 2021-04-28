@@ -60,6 +60,10 @@ public:
     std::vector<long long> listBookedOrdersOfEmployee(long long employeeId);
 
     std::vector<long long> listOrdersOfClient(long long clientId);
+
+    std::vector<long long> listCompanies();
+
+    std::vector<long long> listEmployeesOfCompany(long long id);
 };
 
 }  // namespace dataBase

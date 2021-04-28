@@ -6,7 +6,9 @@
 namespace dataBase {
 class ClientAPI {
 public:
-    static Client createClient(std::string fullName, std::string phoneNumber, std::string email);
+    static Client createClient(std::string fullName,
+                               std::string phoneNumber,
+                               std::string email);
 
     static std::vector<long long> listCompanies();
 
@@ -36,6 +38,6 @@ public:
 
     static std::vector<long long> listVacantOrdersOfEmployee(long long id);
 };
-}
+}  // namespace dataBase
 
-#endif //BTIMETABLE_CLIENTAPI_H
+#endif  // BTIMETABLE_CLIENTAPI_H

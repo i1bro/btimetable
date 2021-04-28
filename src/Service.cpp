@@ -14,8 +14,8 @@ Order Service::createOrder(long long companyId,
                            int timeStart,
                            int duration,
                            int employeeId) {
-    Order order(storage.giveOrderId(), companyId, std::move(title), timeStart, duration,
-                employeeId);
+    Order order(storage.giveOrderId(), companyId, std::move(title), timeStart,
+                duration, employeeId);
     storage.storeOrder(order);
     return std::move(order);
 }
@@ -26,8 +26,8 @@ Order Service::createOrder(long long companyId,
                            int duration,
                            int clientId,
                            int employeeId) {
-    Order order(storage.giveOrderId(), companyId, std::move(title), timeStart, duration,
-                clientId, employeeId);
+    Order order(storage.giveOrderId(), companyId, std::move(title), timeStart,
+                duration, clientId, employeeId);
     storage.storeOrder(order);
     return std::move(order);
 }
@@ -38,8 +38,11 @@ Employee Service::createEmployee(long long companyId, std::string fullName) {
     return std::move(employee);
 }
 
-Client Service::createClient(std::string fullName, std::string phoneNumber, std::string email) {
-    Client client(storage.giveClientId(), std::move(fullName), std::move(phoneNumber), std::move(email));
+Client Service::createClient(std::string fullName,
+                             std::string phoneNumber,
+                             std::string email) {
+    Client client(storage.giveClientId(), std::move(fullName),
+                  std::move(phoneNumber), std::move(email));
     storage.storeClient(client);
     return std::move(client);
 }
@@ -114,5 +117,13 @@ std::vector<long long> Service::listAllOrdersOfEmployee(long long id) {
 
 std::vector<long long> Service::listOrdersOfClient(long long id) {
     return std::move(storage.listOrdersOfClient(id));
+}
+
+std::vector<long long> Service::listCompanies() {
+    return storage.listCompanies();
+}
+
+std::vector<long long> Service::listEmployeesOfCompany(long long id) {
+    return storage.listEmployeesOfCompany(id);
 }
 }  // namespace dataBase

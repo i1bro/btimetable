@@ -6,38 +6,44 @@
 namespace dataBase {
 class CompanyAPI {
 public:
-    void createCompany(std::string name);
+    static Company createCompany(std::string name);
 
-    Order createOrder(long long companyId,
-                      std::string title,
-                      int timeStart,
-                      int duration,
-                      int employeeId);
+    static Order createOrder(long long companyId,
+                             std::string title,
+                             int timeStart,
+                             int duration,
+                             int employeeId);
 
-    Employee createEmployee(long long companyId, std::string fullName);
+    static Employee createEmployee(long long companyId, std::string fullName);
 
-    std::vector<long long> listVacantOrders(long long companyId);
+    static std::vector<long long> listVacantOrdersOfCompany(long long id);
 
-    std::vector<long long> listBookedOrders(long long companyId);
+    static std::vector<long long> listBookedOrdersOfCompany(long long id);
 
-    std::vector<long long> listAllOrders(long long companyId);
+    static std::vector<long long> listAllOrdersOfCompany(long long id);
 
-    void deleteOrder(long long companyId, long long orderId);
+    static Order getOrderById(long long id);
 
-    void deleteEmployee(long long companyId, long long employeeId);
+    static Employee getEmployeeById(long long id);
 
-    Order getOrderById(long long id);
+    static Company getCompanyById(long long id);
 
-    Employee getEmployeeById(long long id);
+    static void changeOrderTitle(long long id, std::string title);
 
-    Company getCompanyById(long long id);
+    static void changeOrderTimeStart(long long id, int timeStart);
 
-    void modifyOrder(const Order &order);
+    static void changeOrderDuration(long long id, int duration);
 
-    void modifyEmployee(const Employee &employee);
+    static void changeEmployeeFullName(long long id, std::string fullName);
 
-    std::vector<long long> listOrdersOfEmployee(long long id);
+    static std::vector<long long> listVacantOrdersOfEmployee(long long id);
+
+    static std::vector<long long> listBookedOrdersOfEmployee(long long id);
+
+    static std::vector<long long> listAllOrdersOfEmployee(long long id);
+
+    static std::vector<long long> listEmployeesOfCompany(long long id);
 };
-}
+}  // namespace dataBase
 
-#endif //BTIMETABLE_COMPANYAPI_H
+#endif  // BTIMETABLE_COMPANYAPI_H
