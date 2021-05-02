@@ -8,17 +8,17 @@ long long Storage::giveEmployeeId() {
 }
 
 long long Storage::giveClientId() {
-    long long id = redis.incr("lastClientId");
-    redis.sadd("CompanyList", std::to_string(id));
-    return id;
+    return redis.incr("lastClientId");
 }
 
 long long Storage::giveOrderId() {
-    return redis.incr("lastEmployeeId");
+    return redis.incr("lastOrderId");
 }
 
 long long Storage::giveCompanyId() {
-    return redis.incr("lastCompanyId");
+    long long id = redis.incr("lastCompanyId");
+    redis.sadd("CompanyList", std::to_string(id));
+    return id;
 }
 
 void Storage::storeEmployee(const Employee &employee) {
@@ -50,7 +50,7 @@ void Storage::storeOrder(const Order &order) {
     value["employeeId"] = order.employeeId;
     redis.set(key, value.dump());
     redis.set(key + ":companyId", std::to_string(order.companyId));
-    if (order.employeeId == -1) {
+    if (order.clientId == -1) {
         redis.sadd(
             "Company:" + std::to_string(order.companyId) + ":vacantOrders",
             std::to_string(order.id));
@@ -168,8 +168,8 @@ void Storage::deleteOrderOfClient(long long int clientId,
 }
 
 std::vector<long long> Storage::listVacantOrdersOfCompany(
-    long long employeeId) {
-    std::string key = "Company:" + std::to_string(employeeId) + ":vacantOrders";
+    long long id) {
+    std::string key = "Company:" + std::to_string(id) + ":vacantOrders";
     std::vector<std::string> response;
     redis.smembers(key, std::inserter(response, response.begin()));
     std::vector<long long> ans;
@@ -180,8 +180,8 @@ std::vector<long long> Storage::listVacantOrdersOfCompany(
 }
 
 std::vector<long long> Storage::listBookedOrdersOfCompany(
-    long long employeeId) {
-    std::string key = "Company:" + std::to_string(employeeId) + ":bookedOrders";
+    long long id) {
+    std::string key = "Company:" + std::to_string(id) + ":bookedOrders";
     std::vector<std::string> response;
     redis.smembers(key, std::inserter(response, response.begin()));
     std::vector<long long> ans;
@@ -229,7 +229,7 @@ std::vector<long long> Storage::listOrdersOfClient(long long int clientId) {
 }
 
 std::vector<long long> Storage::listCompanies() {
-    std::string key = "ClientList";
+    std::string key = "CompanyList";
     std::vector<std::string> response;
     redis.smembers(key, std::inserter(response, response.begin()));
     std::vector<long long> ans;
