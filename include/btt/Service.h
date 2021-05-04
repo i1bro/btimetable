@@ -17,16 +17,16 @@ public:
 
     static Order createOrder(long long companyId,
                              std::string title,
-                             int timeStart,
-                             int duration,
-                             int employeeId);
+                             long long timeStart,
+                             long long duration,
+                             long long employeeId);
 
     static Order createOrder(long long companyId,
                              std::string title,
-                             int timeStart,
-                             int duration,
-                             int clientId,
-                             int employeeId);
+                             long long timeStart,
+                             long long duration,
+                             long long clientId,
+                             long long employeeId);
 
     static Employee createEmployee(long long companyId, std::string fullName);
 

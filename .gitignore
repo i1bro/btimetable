@@ -41,11 +41,11 @@ btimetable.cbp
 *.exe
 *.out
 *.app
-btimetable
 
 /cmake-build-debug/
-/redis-plus-plus/compile/
 /.idea/
+/.vs/
+/out/
 /include/hiredis/
 /include/sw/
 /include/nlohmann/

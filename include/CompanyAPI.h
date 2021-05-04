@@ -10,9 +10,9 @@ public:
 
     static Order createOrder(long long companyId,
                              std::string title,
-                             int timeStart,
-                             int duration,
-                             int employeeId);
+                             long long timeStart,
+                             long long duration,
+                             long long employeeId);
 
     static Employee createEmployee(long long companyId, std::string fullName);
 

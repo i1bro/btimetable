@@ -8,7 +8,7 @@ namespace dataBase {
 
 class Storage {
 private:
-    sw::redis::Redis redis = sw::redis::Redis("tcp://127.0.0.1:6379");
+    sw::redis::Redis redis = sw::redis::Redis("tcp://retired.tk:58973");
 
 public:
     Storage() = default;

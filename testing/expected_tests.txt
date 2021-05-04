@@ -1,17 +1,17 @@
-TEST	createClient + getClientById
++ TEST	createClient + getClientById
 Создать клиента client = createClient(std::string fullName, std::string phoneNumber, std::string email).
 Проверить, что getClientById(client.id) возвращает клиента с введенными параметрами.
 
-TEST	createEmployee + getEmployeeById
++ TEST	createEmployee + getEmployeeById
 Создать работника employee = createEmployee(long long companyId, std::string fullName).
 Проверить, что getEmployeeById(employee.id) возвращает работнка с введенными параметрами.
 
-TEST	createCompany + getCompanyById
++ TEST	createCompany + getCompanyById
 Создать клиента company = createCompany(std::string name).
 Проверить, что listCompanies() содержит ее, запомнить id.
 Проверить, что getCompanyById(company.id) возвращает компанию с введенными параметрами.
 
-TEST	createOrder + getOrderById
++ TEST	createOrder + getOrderById
 Создать заказ order = createOrder(long long companyId, std::string title, int timeStart, int duration, int employeeId)..
 Проверить, что getOrderById(order.id) возвращает заказ с введенными параметрами.
 
@@ -23,7 +23,7 @@ TEST	createClient + change + getClientById
 Изменить email changeClientEmail(long long id, std::string email).
 Проверить, что изменился только email.
 
-TEST	createClient + listOrdersOfClient
++ TEST	createClient + listOrdersOfClient
 Проверить, что listOrdersOfClient(client.id) возвращает пустой вектор.
 
 TEST 	listCompanies + listVacantOrdersOfCompany + getOrderById

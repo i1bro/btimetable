@@ -11,9 +11,9 @@ Company Service::createCompany(std::string name) {
 
 Order Service::createOrder(long long companyId,
                            std::string title,
-                           int timeStart,
-                           int duration,
-                           int employeeId) {
+                           long long timeStart,
+                           long long duration,
+                           long long employeeId) {
     Order order(storage.giveOrderId(), companyId, std::move(title), timeStart,
                 duration, employeeId);
     storage.storeOrder(order);
@@ -22,10 +22,10 @@ Order Service::createOrder(long long companyId,
 
 Order Service::createOrder(long long companyId,
                            std::string title,
-                           int timeStart,
-                           int duration,
-                           int clientId,
-                           int employeeId) {
+                           long long timeStart,
+                           long long duration,
+                           long long clientId,
+                           long long employeeId) {
     Order order(storage.giveOrderId(), companyId, std::move(title), timeStart,
                 duration, clientId, employeeId);
     storage.storeOrder(order);

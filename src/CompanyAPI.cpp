@@ -9,9 +9,9 @@ Company CompanyAPI::createCompany(std::string name) {
 
 Order CompanyAPI::createOrder(long long companyId,
                               std::string title,
-                              int timeStart,
-                              int duration,
-                              int employeeId) {
+                              long long timeStart,
+                              long long duration,
+                              long long employeeId) {
     return Service::createOrder(companyId, std::move(title), timeStart,
                                 duration, employeeId);
 }
