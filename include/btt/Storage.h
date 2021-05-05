@@ -4,7 +4,7 @@
 #include <sw/redis++/redis++.h>
 #include "Entities.h"
 
-namespace dataBase {
+namespace db {
 
 class Storage {
 private:
@@ -66,6 +66,6 @@ public:
     std::vector<long long> listEmployeesOfCompany(long long id);
 };
 
-}  // namespace dataBase
+}  // namespace db
 
 #endif  // BTIMETABLE_STORAGE_H

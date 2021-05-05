@@ -1,7 +1,7 @@
 
 #include "btt/Service.h"
 
-namespace dataBase {
+namespace db {
 
 Company Service::createCompany(std::string name) {
     Company company(storage.giveCompanyId(), std::move(name));
@@ -126,4 +126,4 @@ std::vector<long long> Service::listCompanies() {
 std::vector<long long> Service::listEmployeesOfCompany(long long id) {
     return storage.listEmployeesOfCompany(id);
 }
-}  // namespace dataBase
+}  // namespace db

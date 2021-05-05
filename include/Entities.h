@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-namespace dataBase {
+namespace db {
 
 class Employee {
 private:
@@ -103,5 +103,5 @@ public:
     }
 };
 
-}  // namespace dataBase
+}  // namespace db
 #endif  // BTIMETABLE_ENTITIES_H

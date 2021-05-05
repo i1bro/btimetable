@@ -4,7 +4,7 @@
 #include "Entities.h"
 #include "Storage.h"
 
-namespace dataBase {
+namespace db {
 
 class Service {
 private:
@@ -73,6 +73,6 @@ public:
     static std::vector<long long> listEmployeesOfCompany(long long id);
 };
 
-}  // namespace dataBase
+}  // namespace db
 
 #endif  // BTIMETABLE_SERVICE_H

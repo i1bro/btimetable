@@ -1,7 +1,7 @@
 #include "CompanyAPI.h"
 #include "btt/Service.h"
 
-namespace dataBase {
+namespace db {
 
 Company CompanyAPI::createCompany(std::string name) {
     return Service::createCompany(std::move(name));
@@ -50,13 +50,13 @@ void CompanyAPI::changeOrderTitle(long long id, std::string title) {
     Service::saveOrder(order);
 }
 
-void CompanyAPI::changeOrderTimeStart(long long id, int timeStart) {
+void CompanyAPI::changeOrderTimeStart(long long id, long long timeStart) {
     auto order = Service::getOrderById(id);
     order.timeStart = timeStart;
     Service::saveOrder(order);
 }
 
-void CompanyAPI::changeOrderDuration(long long id, int duration) {
+void CompanyAPI::changeOrderDuration(long long id, long long duration) {
     auto order = Service::getOrderById(id);
     order.duration = duration;
     Service::saveOrder(order);
@@ -83,4 +83,4 @@ std::vector<long long> CompanyAPI::listAllOrdersOfEmployee(long long id) {
 std::vector<long long> CompanyAPI::listEmployeesOfCompany(long long id) {
     return Service::listEmployeesOfCompany(id);
 }
-}  // namespace dataBase
+}  // namespace db

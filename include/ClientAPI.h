@@ -3,7 +3,7 @@
 
 #include "Entities.h"
 
-namespace dataBase {
+namespace db {
 class ClientAPI {
 public:
     static Client createClient(std::string fullName,
@@ -38,6 +38,6 @@ public:
 
     static std::vector<long long> listVacantOrdersOfEmployee(long long id);
 };
-}  // namespace dataBase
+}  // namespace db
 
 #endif  // BTIMETABLE_CLIENTAPI_H

@@ -1,7 +1,7 @@
 #include "ClientAPI.h"
 #include "btt/Service.h"
 
-namespace dataBase {
+namespace db {
 
 Client ClientAPI::createClient(std::string fullName,
                                std::string phoneNumber,
@@ -76,4 +76,4 @@ std::vector<long long> ClientAPI::listVacantOrdersOfEmployee(long long id) {
     return Service::listVacantOrdersOfEmployee(id);
 }
 
-}  // namespace dataBase
+}  // namespace db

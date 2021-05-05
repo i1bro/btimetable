@@ -1,7 +1,7 @@
 #include "btt/Storage.h"
 #include <nlohmann/json.hpp>
 
-namespace dataBase {
+namespace db {
 
 long long Storage::giveEmployeeId() {
     return redis.incr("lastEmployeeId");
@@ -250,4 +250,4 @@ std::vector<long long> Storage::listEmployeesOfCompany(long long int id) {
     return std::move(ans);
 }
 
-}  // namespace dataBase
+}  // namespace db

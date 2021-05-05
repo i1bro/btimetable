@@ -3,7 +3,7 @@
 
 #include "Entities.h"
 
-namespace dataBase {
+namespace db {
 class CompanyAPI {
 public:
     static Company createCompany(std::string name);
@@ -30,9 +30,9 @@ public:
 
     static void changeOrderTitle(long long id, std::string title);
 
-    static void changeOrderTimeStart(long long id, int timeStart);
+    static void changeOrderTimeStart(long long id, long long timeStart);
 
-    static void changeOrderDuration(long long id, int duration);
+    static void changeOrderDuration(long long id, long long duration);
 
     static void changeEmployeeFullName(long long id, std::string fullName);
 
@@ -44,6 +44,6 @@ public:
 
     static std::vector<long long> listEmployeesOfCompany(long long id);
 };
-}  // namespace dataBase
+}  // namespace db
 
 #endif  // BTIMETABLE_COMPANYAPI_H
