@@ -40,13 +40,13 @@ TEST 	listCompanies + listEmployeesOfCompany + listVacantOrdersOfEmployee + getO
 Проверить, что listOrdersOfEmployee(long long id) // TODO: listOrdersOfEmployee и listVacantOrdersOfEmployee различны?
 возвращает вектор заказов работника, проверить с помощью getOrderById(long long id), что заказы соответствуют действительности.
 
-TEST 	listCompanies + listVacantOrdersOfCompany + bookOrder + listOrdersOfClient 
++ TEST 	listCompanies + listVacantOrdersOfCompany + bookOrder + listOrdersOfClient
 Проверить, что заказ есть в списках listVacantOrdersOfCompany(long long id), listOrdersOfEmployee(long long id).
 Забуковать его bookOrder(long long orderId, long long clientId).
 Проверить, что он пропал из списков listVacantOrdersOfCompany(long long id), listOrdersOfEmployee(long long id).
 Проверить, что он появился в списках listOrdersOfClient(long long id), listBookedOrders(long long companyId).
 
-TEST 	listOrdersOfClient + getOrderById
++ TEST 	listOrdersOfClient + getOrderById
 listOrdersOfClient + cancelOrder + getOrderById + listOrdersOfClient
  + listVacantOrdersOfCompany + listVacantOrdersOfEmployee
 Отменить бронирование cancelOrder(long long orderId).
@@ -65,7 +65,7 @@ TEST	Wrong ids:
 + saveOrder + getOrderById
 + saveCompany + getCompanyById
 
-8-15 + listBookedOrders
++ 8-15 + listBookedOrders
 
 
 
