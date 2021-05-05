@@ -125,10 +125,9 @@ TEST_CASE ("Change structures") {
         CHECK(b.phoneNumber == "+7-012-345-67-89");
     }
 
-    auto company = db::CompanyAPI::createCompany("Zavod");
-    auto employee = db::CompanyAPI::createEmployee(company.id, "Vasya");
-
     SUBCASE("Order title") {
+        auto company = db::CompanyAPI::createCompany("Zavod");
+        auto employee = db::CompanyAPI::createEmployee(company.id, "Vasya");
         auto a = db::CompanyAPI::createOrder(company.id, "nogotochki", randomNumber(), randomNumber(), employee.id);
 
         db::CompanyAPI::changeOrderTitle(a.id, "-____-");
@@ -143,6 +142,8 @@ TEST_CASE ("Change structures") {
     }
 
     SUBCASE("Order timeStart") {
+        auto company = db::CompanyAPI::createCompany("Zavod");
+        auto employee = db::CompanyAPI::createEmployee(company.id, "Vasya");
         auto a = db::CompanyAPI::createOrder(company.id, "nogotochki", randomNumber(), randomNumber(), employee.id);
 
         auto newValue = randomNumber();
@@ -158,6 +159,8 @@ TEST_CASE ("Change structures") {
     }
 
     SUBCASE("Order duration") {
+        auto company = db::CompanyAPI::createCompany("Zavod");
+        auto employee = db::CompanyAPI::createEmployee(company.id, "Vasya");
         auto a = db::CompanyAPI::createOrder(company.id, "nogotochki", randomNumber(), randomNumber(), employee.id);
 
         auto newValue = randomNumber();
@@ -173,6 +176,7 @@ TEST_CASE ("Change structures") {
     }
 
     SUBCASE("Employee fullName") {
+        auto company = db::CompanyAPI::createCompany("Zavod");
         auto a = db::CompanyAPI::createEmployee(company.id, "Vasya");
 
         db::CompanyAPI::changeEmployeeFullName(a.id, "Petya");
