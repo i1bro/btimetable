@@ -6,9 +6,9 @@
 namespace db {
 class ClientAPI {
 public:
-    static Client createClient(std::string fullName,
-                               std::string phoneNumber,
-                               std::string email);
+    static Client createClient(const std::string& fullName,
+                               const std::string& phoneNumber,
+                               const std::string& email);
 
     static std::vector<long long> listCompanies();
 

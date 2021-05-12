@@ -1,15 +1,15 @@
 #pragma comment(lib, "ws2_32.lib")
 
 #include <random>
-#include "btt/Service.h"
-#include "CompanyAPI.h"
 #include "ClientAPI.h"
+#include "CompanyAPI.h"
 #include "Entities.h"
+#include "btt/Service.h"
 #include "doctest.h"
 
 bool isIn(const std::vector<long long> &a, long long b) {
-    for(auto c: a) {
-        if(c == b) {
+    for (auto c : a) {
+        if (c == b) {
             return true;
         }
     }
@@ -20,11 +20,9 @@ long long randomNumber() {
     return std::rand();
 }
 
-TEST_CASE ("Create structures") {
-
+TEST_CASE("Create structures") {
     SUBCASE("Client") {
-        auto a = db::ClientAPI::createClient("Vasya",
-                                             "+7-987-654-32-10",
+        auto a = db::ClientAPI::createClient("Vasya", "+7-987-654-32-10",
                                              "vasya@mail.com");
         CHECK(db::ClientAPI::listOrdersOfClient(a.id).empty());
 
@@ -59,9 +57,13 @@ TEST_CASE ("Create structures") {
     SUBCASE("Order") {
         auto company = db::CompanyAPI::createCompany("Zavod");
         auto employee = db::CompanyAPI::createEmployee(company.id, "Vasya");
-        auto a = db::CompanyAPI::createOrder(company.id, "nogotochki", randomNumber(), randomNumber(), employee.id);
-        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfCompany(company.id), a.id));
-        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee.id), a.id));
+        auto a = db::CompanyAPI::createOrder(company.id, "nogotochki",
+                                             randomNumber(), randomNumber(),
+                                             employee.id);
+        CHECK(
+            isIn(db::CompanyAPI::listVacantOrdersOfCompany(company.id), a.id));
+        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee.id),
+                   a.id));
         CHECK(a.companyId == company.id);
         CHECK(a.employeeId == employee.id);
         CHECK(a.clientId == -1);
@@ -75,20 +77,24 @@ TEST_CASE ("Create structures") {
         CHECK(a.employeeId == b.employeeId);
         CHECK(a.clientId == b.clientId);
 
-        auto c = db::CompanyAPI::createOrder(company.id, "1234", randomNumber(), randomNumber(), employee.id);
-        auto d = db::CompanyAPI::createOrder(company.id, "1234", randomNumber(), randomNumber(), employee.id);
-        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfCompany(company.id), c.id));
-        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee.id), c.id));
-        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfCompany(company.id), d.id));
-        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee.id), d.id));
+        auto c = db::CompanyAPI::createOrder(company.id, "1234", randomNumber(),
+                                             randomNumber(), employee.id);
+        auto d = db::CompanyAPI::createOrder(company.id, "1234", randomNumber(),
+                                             randomNumber(), employee.id);
+        CHECK(
+            isIn(db::CompanyAPI::listVacantOrdersOfCompany(company.id), c.id));
+        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee.id),
+                   c.id));
+        CHECK(
+            isIn(db::CompanyAPI::listVacantOrdersOfCompany(company.id), d.id));
+        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee.id),
+                   d.id));
     }
 }
 
-TEST_CASE ("Change structures") {
-
+TEST_CASE("Change structures") {
     SUBCASE("Client email") {
-        auto a = db::ClientAPI::createClient("Vasya",
-                                             "+7-987-654-32-10",
+        auto a = db::ClientAPI::createClient("Vasya", "+7-987-654-32-10",
                                              "vasya@mail.com");
 
         db::ClientAPI::changeClientEmail(a.id, "petya@mail.com");
@@ -100,8 +106,7 @@ TEST_CASE ("Change structures") {
     }
 
     SUBCASE("Client fullName") {
-        auto a = db::ClientAPI::createClient("Vasya",
-                                             "+7-987-654-32-10",
+        auto a = db::ClientAPI::createClient("Vasya", "+7-987-654-32-10",
                                              "vasya@mail.com");
 
         db::ClientAPI::changeClientFullName(a.id, "Petya");
@@ -113,8 +118,7 @@ TEST_CASE ("Change structures") {
     }
 
     SUBCASE("Client phoneNumber") {
-        auto a = db::ClientAPI::createClient("Vasya",
-                                             "+7-987-654-32-10",
+        auto a = db::ClientAPI::createClient("Vasya", "+7-987-654-32-10",
                                              "vasya@mail.com");
 
         db::ClientAPI::changeClientPhoneNumber(a.id, "+7-012-345-67-89");
@@ -128,7 +132,9 @@ TEST_CASE ("Change structures") {
     SUBCASE("Order title") {
         auto company = db::CompanyAPI::createCompany("Zavod");
         auto employee = db::CompanyAPI::createEmployee(company.id, "Vasya");
-        auto a = db::CompanyAPI::createOrder(company.id, "nogotochki", randomNumber(), randomNumber(), employee.id);
+        auto a = db::CompanyAPI::createOrder(company.id, "nogotochki",
+                                             randomNumber(), randomNumber(),
+                                             employee.id);
 
         db::CompanyAPI::changeOrderTitle(a.id, "-____-");
         auto b = db::CompanyAPI::getOrderById(a.id);
@@ -144,7 +150,9 @@ TEST_CASE ("Change structures") {
     SUBCASE("Order timeStart") {
         auto company = db::CompanyAPI::createCompany("Zavod");
         auto employee = db::CompanyAPI::createEmployee(company.id, "Vasya");
-        auto a = db::CompanyAPI::createOrder(company.id, "nogotochki", randomNumber(), randomNumber(), employee.id);
+        auto a = db::CompanyAPI::createOrder(company.id, "nogotochki",
+                                             randomNumber(), randomNumber(),
+                                             employee.id);
 
         auto newValue = randomNumber();
         db::CompanyAPI::changeOrderTimeStart(a.id, newValue);
@@ -161,7 +169,9 @@ TEST_CASE ("Change structures") {
     SUBCASE("Order duration") {
         auto company = db::CompanyAPI::createCompany("Zavod");
         auto employee = db::CompanyAPI::createEmployee(company.id, "Vasya");
-        auto a = db::CompanyAPI::createOrder(company.id, "nogotochki", randomNumber(), randomNumber(), employee.id);
+        auto a = db::CompanyAPI::createOrder(company.id, "nogotochki",
+                                             randomNumber(), randomNumber(),
+                                             employee.id);
 
         auto newValue = randomNumber();
         db::CompanyAPI::changeOrderDuration(a.id, newValue);
@@ -187,13 +197,14 @@ TEST_CASE ("Change structures") {
     }
 }
 
-TEST_CASE ("Booking and cancelling") {
+TEST_CASE("Booking and cancelling") {
     auto company = db::CompanyAPI::createCompany("Zavod");
     auto employee = db::CompanyAPI::createEmployee(company.id, "Petya");
-    auto client = db::ClientAPI::createClient("Vasya",
-                                              "+7-987-654-32-10",
-                                              "vasya@mail.com");;
-    auto a = db::CompanyAPI::createOrder(company.id, "nogotochki", randomNumber(), randomNumber(), employee.id);
+    auto client = db::ClientAPI::createClient("Vasya", "+7-987-654-32-10",
+                                              "vasya@mail.com");
+    ;
+    auto a = db::CompanyAPI::createOrder(
+        company.id, "nogotochki", randomNumber(), randomNumber(), employee.id);
     CHECK(isIn(db::CompanyAPI::listVacantOrdersOfCompany(company.id), a.id));
     CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee.id), a.id));
     CHECK(!isIn(db::CompanyAPI::listBookedOrdersOfCompany(company.id), a.id));

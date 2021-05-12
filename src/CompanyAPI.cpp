@@ -1,23 +1,25 @@
 #include "CompanyAPI.h"
+
+#include <utility>
 #include "btt/Service.h"
 
 namespace db {
 
-Company CompanyAPI::createCompany(std::string name) {
-    return Service::createCompany(std::move(name));
+Company CompanyAPI::createCompany(const std::string& name) {
+    return Service::createCompany(name);
 }
 
 Order CompanyAPI::createOrder(long long companyId,
-                              std::string title,
-                              long long timeStart,
-                              long long duration,
+                              const std::string& title,
+                              const std::string& timeStart,
+                              const std::string& duration,
                               long long employeeId) {
-    return Service::createOrder(companyId, std::move(title), timeStart,
+    return Service::createOrder(companyId, title, timeStart,
                                 duration, employeeId);
 }
 
-Employee CompanyAPI::createEmployee(long long companyId, std::string fullName) {
-    return Service::createEmployee(companyId, std::move(fullName));
+Employee CompanyAPI::createEmployee(long long companyId, const std::string& fullName) {
+    return Service::createEmployee(companyId, fullName);
 }
 
 std::vector<long long> CompanyAPI::listVacantOrdersOfCompany(long long id) {
@@ -50,15 +52,15 @@ void CompanyAPI::changeOrderTitle(long long id, std::string title) {
     Service::saveOrder(order);
 }
 
-void CompanyAPI::changeOrderTimeStart(long long id, long long timeStart) {
+void CompanyAPI::changeOrderTimeStart(long long id, std::string timeStart) {
     auto order = Service::getOrderById(id);
-    order.timeStart = timeStart;
+    order.timeStart = std::move(timeStart);
     Service::saveOrder(order);
 }
 
-void CompanyAPI::changeOrderDuration(long long id, long long duration) {
+void CompanyAPI::changeOrderDuration(long long id, std::string duration) {
     auto order = Service::getOrderById(id);
-    order.duration = duration;
+    order.duration = std::move(duration);
     Service::saveOrder(order);
 }
 
