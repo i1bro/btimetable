@@ -21,10 +21,10 @@ ELSE()
     #set_target_properties(pq PROPERTIES IMPORTED_LOCATION ../lib/libpq.a)
 ENDIF()
 
-add_executable(init_db init_db.cpp)
+add_executable(init-db initDB.cpp)
 
-target_link_libraries(init_db pqxx pq)
-target_include_directories(init_db PRIVATE include include/postgresql)
+target_link_libraries(init-db pqxx pq)
+target_include_directories(init-db PRIVATE include include/postgresql)
 
 add_executable(data-base-test
         testing/doctestMain.cpp

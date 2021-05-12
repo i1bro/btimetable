@@ -3,48 +3,32 @@
 
 namespace db {
 
-Company Service::createCompany(std::string name) {
-    Company company(storage.giveCompanyId(), std::move(name));
-    storage.storeCompany(company);
-    return std::move(company);
+Company Service::createCompany(const std::string &name) {
+    long long res = storage.createCompany(name);
+    return storage.getCompanyById(res);
 }
 
 Order Service::createOrder(long long companyId,
-                           std::string title,
-                           long long timeStart,
-                           long long duration,
+                           const std::string &title,
+                           const std::string &timeStart,
+                           const std::string &duration,
                            long long employeeId) {
-    Order order(storage.giveOrderId(), companyId, std::move(title), timeStart,
-                duration, employeeId);
-    storage.storeOrder(order);
-    return std::move(order);
+    long long res =
+        storage.createOrder(companyId, title, timeStart, duration, employeeId);
+    return storage.getOrderById(res);
 }
 
-Order Service::createOrder(long long companyId,
-                           std::string title,
-                           long long timeStart,
-                           long long duration,
-                           long long clientId,
-                           long long employeeId) {
-    Order order(storage.giveOrderId(), companyId, std::move(title), timeStart,
-                duration, clientId, employeeId);
-    storage.storeOrder(order);
-    return std::move(order);
+Employee Service::createEmployee(long long companyId,
+                                 const std::string &fullName) {
+    long long res = storage.createEmployee(companyId, fullName);
+    return storage.getEmployeeById(res);
 }
 
-Employee Service::createEmployee(long long companyId, std::string fullName) {
-    Employee employee(storage.giveEmployeeId(), companyId, std::move(fullName));
-    storage.storeEmployee(employee);
-    return std::move(employee);
-}
-
-Client Service::createClient(std::string fullName,
-                             std::string phoneNumber,
-                             std::string email) {
-    Client client(storage.giveClientId(), std::move(fullName),
-                  std::move(phoneNumber), std::move(email));
-    storage.storeClient(client);
-    return std::move(client);
+Client Service::createClient(const std::string &fullName,
+                             const std::string &phoneNumber,
+                             const std::string &email) {
+    long long res = storage.createClient(fullName, phoneNumber, email);
+    return storage.getClientById(res);
 }
 
 std::vector<long long> Service::listVacantOrdersOfCompany(long long id) {
@@ -80,10 +64,6 @@ Company Service::getCompanyById(long long id) {
 }
 
 void Service::saveOrder(const Order &order) {
-    auto oldOrder = storage.getOrderById(order.id);
-    if (oldOrder.clientId != -1) {
-        storage.deleteOrderOfClient(oldOrder.clientId, order.id);
-    }
     storage.storeOrder(order);
 }
 

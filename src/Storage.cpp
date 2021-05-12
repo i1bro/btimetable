@@ -1,139 +1,408 @@
 #include "btt/Storage.h"
-#include <nlohmann/json.hpp>
 
 namespace db {
 
-long long Storage::giveEmployeeId() {
-    return redis.incr("lastEmployeeId");
+std::string Operation::execute() const {
+    if (!canBeExecuted) {
+        throw std::runtime_error("TODO");  // TODO
+    }
+    return s.str();
 }
 
-long long Storage::giveClientId() {
-    return redis.incr("lastClientId");
-}
-
-long long Storage::giveOrderId() {
-    return redis.incr("lastOrderId");
-}
-
-long long Storage::giveCompanyId() {
-    long long id = redis.incr("lastCompanyId");
-    redis.sadd("CompanyList", std::to_string(id));
-    return id;
-}
-
-void Storage::storeEmployee(const Employee &employee) {
-    std::string key = "Employee:" + std::to_string(employee.id);
-    nlohmann::json value;
-    value["fullName"] = employee.fullName;
-    redis.set(key, value.dump());
-    redis.set(key + ":companyId", std::to_string(employee.companyId));
-    redis.sadd("Company:" + std::to_string(employee.companyId) + ":employees",
-               std::to_string(employee.id));
-}
-
-void Storage::storeClient(const Client &client) {
-    std::string key = "Client:" + std::to_string(client.id);
-    nlohmann::json value;
-    value["fullName"] = client.fullName;
-    value["phoneNumber"] = client.phoneNumber;
-    value["email"] = client.email;
-    redis.set(key, value.dump());
-}
-
-void Storage::storeOrder(const Order &order) {
-    std::string key = "Order:" + std::to_string(order.id);
-    nlohmann::json value;
-    value["title"] = order.title;
-    value["timeStart"] = order.timeStart;
-    value["duration"] = order.duration;
-    value["clientId"] = order.clientId;
-    value["employeeId"] = order.employeeId;
-    redis.set(key, value.dump());
-    redis.set(key + ":companyId", std::to_string(order.companyId));
-    if (order.clientId == -1) {
-        redis.sadd(
-            "Company:" + std::to_string(order.companyId) + ":vacantOrders",
-            std::to_string(order.id));
-        redis.sadd(
-            "Employee:" + std::to_string(order.employeeId) + ":vacantOrders",
-            std::to_string(order.id));
-        redis.srem(
-            "Company:" + std::to_string(order.companyId) + ":bookedOrders",
-            std::to_string(order.id));
-        redis.srem(
-            "Employee:" + std::to_string(order.employeeId) + ":bookedOrders",
-            std::to_string(order.id));
-    } else {
-        redis.sadd("Client:" + std::to_string(order.clientId) + ":orders",
-                   std::to_string(order.id));
-        redis.sadd(
-            "Company:" + std::to_string(order.companyId) + ":bookedOrders",
-            std::to_string(order.id));
-        redis.sadd(
-            "Employee:" + std::to_string(order.employeeId) + ":bookedOrders",
-            std::to_string(order.id));
-        redis.srem(
-            "Company:" + std::to_string(order.companyId) + ":vacantOrders",
-            std::to_string(order.id));
-        redis.srem(
-            "Employee:" + std::to_string(order.employeeId) + ":vacantOrders",
-            std::to_string(order.id));
+std::string Operation::parseCol(column col) {
+    if (col == id) {
+        return "id";
+    }
+    if (col == all) {
+        return "*";
+    }
+    switch (table) {
+        case clients:
+            switch (col) {
+                case fullName:
+                    return "full_name";
+                case phoneNumber:
+                    return "phone_number";
+                case email:
+                    return "email";
+                default:
+                    throw std::invalid_argument("TODO");  // TODO
+            }
+        case employees:
+            switch (col) {
+                case companyId:
+                    return "company_id";
+                case fullName:
+                    return "full_name";
+                default:
+                    throw std::invalid_argument("TODO");  // TODO
+            }
+        case orders:
+            switch (col) {
+                case companyId:
+                    return "company_id";
+                case title:
+                    return "title";
+                case duration:
+                    return "duration";
+                case timeStart:
+                    return "time_start";
+                case clientId:
+                    return "client_id";
+                case employeeId:
+                    return "employee_id";
+                default:
+                    throw std::invalid_argument("TODO");  // TODO
+            }
+        case companies:
+            switch (col) {
+                case name:
+                    return "name";
+                default:
+                    throw std::invalid_argument("TODO");  // TODO
+            }
     }
 }
 
+Update::Update(Tables t) {
+    table = t;
+    s << "UPDATE ";
+    switch (table) {
+        case clients:
+            s << "clients ";
+            break;
+        case employees:
+            s << "employees ";
+            break;
+        case orders:
+            s << "orders ";
+            break;
+        case companies:
+            s << "companies ";
+            break;
+    }
+    s << "SET ";
+}
+
+Update &Update::set(column col, const std::string &value) {
+    if (whereUsed) {
+        throw std::invalid_argument("TODO");  // TODO
+    }
+    if (setUsed) {
+        s << ", ";
+    } else {
+        setUsed = true;
+    }
+    s << parseCol(col) << " = " << value << " ";
+    return *this;
+}
+
+Update &Update::set(column col, long long value) {
+    canBeExecuted = true;
+    if (col != clientId) {
+        throw std::invalid_argument("TODO");  // TODO
+    }
+    return set(col, std::to_string(value));
+}
+
+Update &Update::where(column col, const std::string &value) {
+    if (whereUsed) {
+        s << "AND ";
+    } else {
+        whereUsed = true;
+        s << "WHERE ";
+    }
+    s << parseCol(col) << " = " << value << " ";
+    return *this;
+}
+
+Update &Update::where(column col, long long value) {
+    if (col != clientId && col != id) {
+        throw std::invalid_argument("TODO");  // TODO
+    }
+    return where(col, std::to_string(value));
+}
+
+Insert::Insert(Tables t) {
+    table = t;
+    s << "INSERT INTO ";
+    switch (table) {
+        case clients:
+            s << "clients(full_name, phone_number, email) ";
+            requiredCols = {fullName, phoneNumber, email};
+            break;
+        case employees:
+            s << "employees(company_id, full_name) ";
+            requiredCols = {companyId, fullName};
+            break;
+        case orders:
+            s << "orders(company_id, title, time_start, duration, employeeId) ";
+            requiredCols = {companyId, title, timeStart, duration, employeeId};
+            break;
+        case companies:
+            s << "companies(name) ";
+            requiredCols = {name};
+            break;
+    }
+    s << "VALUES (";
+}
+
+Insert &Insert::set(column col, const std::string &value) {
+    if (requiredCols.find(col) == requiredCols.end()) {
+        throw std::invalid_argument("TODO");  // TODO
+    }
+    requiredCols.erase(col);
+    currentValues[col] = value;
+    if (requiredCols.empty()) {
+        switch (table) {
+            case clients:
+                s << currentValues[fullName] << ", "
+                  << currentValues[phoneNumber] << ", " << currentValues[email];
+                break;
+            case employees:
+                s << currentValues[companyId] << ", "
+                  << currentValues[fullName];
+                break;
+            case orders:
+                s << currentValues[companyId] << ", " << currentValues[title]
+                  << ", " << currentValues[timeStart] << ", "
+                  << currentValues[duration] << ", "
+                  << currentValues[employeeId];
+                break;
+            case companies:
+                s << currentValues[name];
+                break;
+        }
+        s << ") RETURNING id";
+        canBeExecuted = true;
+    }
+    return *this;
+}
+
+Insert &Insert::set(column col, long long value) {
+    if (col != employeeId && col != companyId) {
+        throw std::invalid_argument("TODO");  // TODO
+    }
+    return set(col, std::to_string(value));
+}
+
+Select::Select(Tables t) {
+    table = t;
+    s << "SELECT ";
+}
+
+Select &Select::columns(const std::vector<column> &cols) {
+    if (columnsUsed || whereUsed || orderedUsed) {
+        throw std::invalid_argument("TODO");  // TODO
+    }
+    columnsUsed = true;
+    bool first = true;
+    for (auto col : cols) {
+        if (!first) {
+            s << ", ";
+        } else {
+            first = false;
+        }
+        s << parseCol(col);
+    }
+    s << " FROM ";
+    switch (table) {
+        case clients:
+            s << "clients ";
+            break;
+        case employees:
+            s << "employees ";
+            break;
+        case orders:
+            s << "orders ";
+            break;
+        case companies:
+            s << "companies ";
+            break;
+    }
+    canBeExecuted = true;
+    return *this;
+}
+
+Select &Select::where(column col, const std::string &value) {
+    if (orderedUsed) {
+        throw std::invalid_argument("TODO");  // TODO
+    }
+    if (whereUsed) {
+        s << "AND ";
+    } else {
+        whereUsed = true;
+        s << "WHERE ";
+    }
+    s << parseCol(col) << " = " << value << " ";
+    return *this;
+}
+
+Select &Select::where(column col, long long value) {
+    if (col != employeeId && col != companyId && col != clientId && col != id) {
+        throw std::invalid_argument("TODO");  // TODO
+    }
+    return where(col, std::to_string(value));
+}
+
+Select &Select::orderedBy(column col) {
+    if (orderedUsed) {
+        throw std::invalid_argument("TODO");  // TODO
+    }
+    orderedUsed = true;
+    s << "ORDERED BY " << parseCol(col);
+    return *this;
+}
+
+Result::Result(const pqxx::result &res_) {
+    res = res_;
+}
+
+Result &Result::operator=(const pqxx::result &res_) {
+    res = res_;
+    return *this;
+}
+
+Result::Result(pqxx::result &&res_) {
+    res = res_;
+}
+
+Result &Result::operator=(pqxx::result &&res_) {
+    res = res_;
+    return *this;
+}
+
+Employee Result::toEmployee() {
+    pqxx::row cur = res[0];
+    Employee employee(cur["id"].as<long long>(),
+                      cur["company_id"].as<long long>(),
+                      cur["full_name"].c_str());
+    return employee;
+}
+
+Client Result::toClient() {
+    pqxx::row cur = res[0];
+    Client client(cur["id"].as<long long>(), cur["full_name"].c_str(),
+                  cur["phone_number"].c_str(), cur["email"].c_str());
+    return client;
+}
+
+Order Result::toOrder() {
+    pqxx::row cur = res[0];
+    Order order(cur["id"].as<long long>(), cur["company_id"].as<long long>(),
+                cur["title"].c_str(), cur["timeStart"].c_str(),
+                cur["duration"].c_str(), cur["client_id"].as<long long>(),
+                cur["employee_id"].as<long long>());
+    return order;
+}
+
+Company Result::toCompany() {
+    pqxx::row cur = res[0];
+    Company company(cur["id"].as<long long>(), cur["name"].c_str());
+    return company;
+}
+
+long long Result::toLL() {
+    pqxx::row cur = res[0];
+    return cur[0].as<long long>();
+}
+
+std::vector<long long> Result::toVecLL() {
+    std::vector<long long> ans;
+    for (int i = 0; i < res.size(); i++) {
+        ans.push_back(res[0]["id"].as<long long>());
+    }
+    return ans;
+}
+
+Result Storage::execute(const Operation &op) {
+    try {
+        pqxx::work W{C};
+        Result res(W.exec(op.execute()));
+        W.commit();
+    } catch (...) {
+        throw std::invalid_argument("TODO");  // TODO
+    }
+}
+
+long long Storage::createCompany(const std::string &name_) {
+    return execute(Insert(companies).set(name, name_)).toLL();
+}
+
+long long Storage::createOrder(long long companyId_,
+                               const std::string &title_,
+                               const std::string &timeStart_,
+                               const std::string &duration_,
+                               long long employeeId_) {
+    return execute(Insert(orders)
+                       .set(companyId, companyId_)
+                       .set(title, title_)
+                       .set(timeStart, timeStart_)
+                       .set(duration, duration_)
+                       .set(employeeId, employeeId_))
+        .toLL();
+}
+
+long long Storage::createEmployee(long long companyId_,
+                                  const std::string &fullName_) {
+    return execute(Insert(employees)
+                       .set(companyId, companyId_)
+                       .set(fullName, fullName_))
+        .toLL();
+}
+
+long long Storage::createClient(const std::string &fullName_,
+                                const std::string &phoneNumber_,
+                                const std::string &email_) {
+    return execute(Insert(clients)
+                       .set(fullName, fullName_)
+                       .set(phoneNumber, phoneNumber_)
+                       .set(email, email_))
+        .toLL();
+}
+
+void Storage::storeEmployee(const Employee &employee) {
+    execute(Update(employees).set(fullName, employee.fullName));
+}
+
+void Storage::storeClient(const Client &client) {
+    execute(Update(clients)
+                .set(fullName, client.fullName)
+                .set(phoneNumber, client.phoneNumber)
+                .set(email, client.email));
+}
+
+void Storage::storeOrder(const Order &order) {
+    execute(Update(orders)
+                .set(title, order.title)
+                .set(timeStart, order.timeStart)
+                .set(duration, order.duration)
+                .set(clientId, order.clientId)
+                .set(employeeId, order.employeeId));
+}
+
 void Storage::storeCompany(const Company &company) {
-    std::string key = "Company:" + std::to_string(company.id);
-    nlohmann::json value;
-    value["name"] = company.name;
-    redis.set(key, value.dump());
+    execute(Update(companies).set(name, company.name));
 }
 
-Employee Storage::getEmployeeById(long long id) {
-    std::string key = "Employee:" + std::to_string(id);
-    nlohmann::json value = nlohmann::json::parse(redis.get(key).value());
-    Employee employee(id);
-    employee.companyId = std::stoll(redis.get(key + ":companyId").value());
-    employee.fullName = value["fullName"];
-    return std::move(employee);
+Employee Storage::getEmployeeById(long long id_) {
+    return execute(Select(employees).columns({all}).where(id, id_))
+        .toEmployee();
 }
 
-Client Storage::getClientById(long long id) {
-    std::string key = "Client:" + std::to_string(id);
-    nlohmann::json value = nlohmann::json::parse(redis.get(key).value());
-    Client client(id);
-    client.fullName = value["fullName"];
-    client.phoneNumber = value["phoneNumber"];
-    client.email = value["email"];
-    return std::move(client);
+Client Storage::getClientById(long long id_) {
+    return execute(Select(clients).columns({all}).where(id, id_)).toClient();
 }
 
-Order Storage::getOrderById(long long id) {
-    std::string key = "Order:" + std::to_string(id);
-    nlohmann::json value = nlohmann::json::parse(redis.get(key).value());
-    Order order(id);
-    order.companyId = std::stoll(redis.get(key + ":companyId").value());
-    order.title = value["title"];
-    order.timeStart = value["timeStart"];
-    order.duration = value["duration"];
-    order.clientId = value["clientId"];
-    order.employeeId = value["employeeId"];
-    return std::move(order);
+Order Storage::getOrderById(long long id_) {
+    return execute(Select(orders).columns({all}).where(id, id_)).toOrder();
 }
 
-Company Storage::getCompanyById(long long id) {
-    std::string key = "Company:" + std::to_string(id);
-    nlohmann::json value = nlohmann::json::parse(redis.get(key).value());
-    Company company(id);
-    company.name = value["name"];
-    return std::move(company);
+Company Storage::getCompanyById(long long id_) {
+    return execute(Select(companies).columns({all}).where(id, id_)).toCompany();
 }
 
 void Storage::deleteEmployee(long long id) {
-    /*std::string key = "Employee:" + std::to_string(id);
-    redis.del(key);
-    std::string companyId = redis.get(key + ":companyId").value();
-    redis.del(key + ":companyId");
-    redis.srem("Company:" + companyId + ":employees", std::to_string(id));*/
     // TODO
 }
 
@@ -149,105 +418,49 @@ void Storage::deleteCompany(long long id) {
     // TODO
 }
 
-long long Storage::getEmployeeOwner(long long employeeId) {
-    std::string key = "Employee:" + std::to_string(employeeId) + ":companyId";
-    std::string response = redis.get(key).value();
-    return std::stoll(response);
+std::vector<long long> Storage::listVacantOrdersOfCompany(long long id_) {
+    return execute(Select(orders)
+                       .columns({id})
+                       .where(companyId, id_)
+                       .where(clientId, "NULL"))
+        .toVecLL();
 }
 
-long long Storage::getOrderOwner(long long orderId) {
-    std::string key = "Order:" + std::to_string(orderId) + ":companyId";
-    std::string response = redis.get(key).value();
-    return std::stoll(response);
+std::vector<long long> Storage::listBookedOrdersOfCompany(long long id_) {
+    return execute(Select(orders)
+                       .columns({id})
+                       .where(companyId, id_)
+                       .where(clientId, "NOT NULL"))
+        .toVecLL();
 }
 
-void Storage::deleteOrderOfClient(long long int clientId,
-                                  long long int orderId) {
-    std::string key = "Client:" + std::to_string(clientId) + ":orders";
-    redis.srem(key, std::to_string(orderId));
+std::vector<long long> Storage::listVacantOrdersOfEmployee(long long id_) {
+    return execute(Select(orders)
+                       .columns({id})
+                       .where(employeeId, id_)
+                       .where(clientId, "NULL"))
+        .toVecLL();
 }
 
-std::vector<long long> Storage::listVacantOrdersOfCompany(
-    long long id) {
-    std::string key = "Company:" + std::to_string(id) + ":vacantOrders";
-    std::vector<std::string> response;
-    redis.smembers(key, std::inserter(response, response.begin()));
-    std::vector<long long> ans;
-    for (auto &i : response) {
-        ans.push_back(stoll(i));
-    }
-    return std::move(ans);
+std::vector<long long> Storage::listBookedOrdersOfEmployee(long long id_) {
+    return execute(Select(orders)
+                       .columns({id})
+                       .where(employeeId, id_)
+                       .where(clientId, "NOT NULL"))
+        .toVecLL();
 }
 
-std::vector<long long> Storage::listBookedOrdersOfCompany(
-    long long id) {
-    std::string key = "Company:" + std::to_string(id) + ":bookedOrders";
-    std::vector<std::string> response;
-    redis.smembers(key, std::inserter(response, response.begin()));
-    std::vector<long long> ans;
-    for (auto &i : response) {
-        ans.push_back(stoll(i));
-    }
-    return std::move(ans);
-}
-
-std::vector<long long> Storage::listVacantOrdersOfEmployee(
-    long long employeeId) {
-    std::string key =
-        "Employee:" + std::to_string(employeeId) + ":vacantOrders";
-    std::vector<std::string> response;
-    redis.smembers(key, std::inserter(response, response.begin()));
-    std::vector<long long> ans;
-    for (auto &i : response) {
-        ans.push_back(stoll(i));
-    }
-    return std::move(ans);
-}
-
-std::vector<long long> Storage::listBookedOrdersOfEmployee(
-    long long employeeId) {
-    std::string key =
-        "Employee:" + std::to_string(employeeId) + ":bookedOrders";
-    std::vector<std::string> response;
-    redis.smembers(key, std::inserter(response, response.begin()));
-    std::vector<long long> ans;
-    for (auto &i : response) {
-        ans.push_back(stoll(i));
-    }
-    return std::move(ans);
-}
-
-std::vector<long long> Storage::listOrdersOfClient(long long int clientId) {
-    std::string key = "Client:" + std::to_string(clientId) + ":orders";
-    std::vector<std::string> response;
-    redis.smembers(key, std::inserter(response, response.begin()));
-    std::vector<long long> ans;
-    for (auto &i : response) {
-        ans.push_back(stoll(i));
-    }
-    return std::move(ans);
+std::vector<long long> Storage::listOrdersOfClient(long long id_) {
+    return execute(Select(orders).columns({id}).where(clientId, id_)).toVecLL();
 }
 
 std::vector<long long> Storage::listCompanies() {
-    std::string key = "CompanyList";
-    std::vector<std::string> response;
-    redis.smembers(key, std::inserter(response, response.begin()));
-    std::vector<long long> ans;
-    for (auto &i : response) {
-        ans.push_back(stoll(i));
-    }
-    return std::move(ans);
+    return execute(Select(companies).columns({id})).toVecLL();
 }
 
-std::vector<long long> Storage::listEmployeesOfCompany(long long int id) {
-    std::string key = "Company:" + std::to_string(id) + ":employees";
-    std::vector<std::string> response;
-    redis.smembers(key, std::inserter(response, response.begin()));
-    std::vector<long long> ans;
-    for (auto &i : response) {
-        ans.push_back(stoll(i));
-    }
-    return std::move(ans);
+std::vector<long long> Storage::listEmployeesOfCompany(long long id_) {
+    return execute(Select(employees).columns({id}).where(companyId, id_))
+        .toVecLL();
 }
 
 }  // namespace db

@@ -13,26 +13,20 @@ private:
 public:
     Service() = default;
 
-    static Company createCompany(std::string name);
+    static Company createCompany(const std::string &name);
 
     static Order createOrder(long long companyId,
-                             std::string title,
-                             long long timeStart,
-                             long long duration,
+                             const std::string &title,
+                             const std::string &timeStart,
+                             const std::string &duration,
                              long long employeeId);
 
-    static Order createOrder(long long companyId,
-                             std::string title,
-                             long long timeStart,
-                             long long duration,
-                             long long clientId,
-                             long long employeeId);
+    static Employee createEmployee(long long companyId,
+                                   const std::string &fullName);
 
-    static Employee createEmployee(long long companyId, std::string fullName);
-
-    static Client createClient(std::string fullName,
-                               std::string phoneNumber,
-                               std::string email);
+    static Client createClient(const std::string &fullName,
+                               const std::string &phoneNumber,
+                               const std::string &email);
 
     static std::vector<long long> listVacantOrdersOfCompany(long long id);
 
