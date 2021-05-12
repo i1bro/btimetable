@@ -29,7 +29,7 @@ int main() {
             "CREATE TABLE clients("
             "id BIGINT GENERATED ALWAYS AS IDENTITY,"
             "full_name VARCHAR(255) NOT NULL,"
-            "phone_number VARCHAR(15),"
+            "phone_number VARCHAR(16),"
             "email varchar(100),"
             "PRIMARY KEY(id)"
             ")");

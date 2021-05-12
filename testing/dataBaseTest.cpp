@@ -16,10 +16,6 @@ bool isIn(const std::vector<long long> &a, long long b) {
     return false;
 }
 
-long long randomNumber() {
-    return std::rand();
-}
-
 TEST_CASE("Create structures") {
     SUBCASE("Client") {
         auto a = db::ClientAPI::createClient("Vasya", "+7-987-654-32-10",
@@ -58,7 +54,7 @@ TEST_CASE("Create structures") {
         auto company = db::CompanyAPI::createCompany("Zavod");
         auto employee = db::CompanyAPI::createEmployee(company.id, "Vasya");
         auto a = db::CompanyAPI::createOrder(company.id, "nogotochki",
-                                             randomNumber(), randomNumber(),
+                                             "2010-04-05 12:00:17", "12:00:17",
                                              employee.id);
         CHECK(
             isIn(db::CompanyAPI::listVacantOrdersOfCompany(company.id), a.id));
@@ -77,10 +73,8 @@ TEST_CASE("Create structures") {
         CHECK(a.employeeId == b.employeeId);
         CHECK(a.clientId == b.clientId);
 
-        auto c = db::CompanyAPI::createOrder(company.id, "1234", randomNumber(),
-                                             randomNumber(), employee.id);
-        auto d = db::CompanyAPI::createOrder(company.id, "1234", randomNumber(),
-                                             randomNumber(), employee.id);
+        auto c = db::CompanyAPI::createOrder(company.id, "1234", "2010-04-05 12:00:17", "12:00:17", employee.id);
+        auto d = db::CompanyAPI::createOrder(company.id, "1234", "2010-04-05 12:00:17", "12:00:17", employee.id);
         CHECK(
             isIn(db::CompanyAPI::listVacantOrdersOfCompany(company.id), c.id));
         CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee.id),
@@ -133,7 +127,7 @@ TEST_CASE("Change structures") {
         auto company = db::CompanyAPI::createCompany("Zavod");
         auto employee = db::CompanyAPI::createEmployee(company.id, "Vasya");
         auto a = db::CompanyAPI::createOrder(company.id, "nogotochki",
-                                             randomNumber(), randomNumber(),
+                                             "2010-04-05 12:00:17", "12:00:17",
                                              employee.id);
 
         db::CompanyAPI::changeOrderTitle(a.id, "-____-");
@@ -151,10 +145,10 @@ TEST_CASE("Change structures") {
         auto company = db::CompanyAPI::createCompany("Zavod");
         auto employee = db::CompanyAPI::createEmployee(company.id, "Vasya");
         auto a = db::CompanyAPI::createOrder(company.id, "nogotochki",
-                                             randomNumber(), randomNumber(),
+                                             "2010-04-05 12:00:17", "12:00:17",
                                              employee.id);
 
-        auto newValue = randomNumber();
+        auto newValue = "2010-04-05 12:00:17";
         db::CompanyAPI::changeOrderTimeStart(a.id, newValue);
         auto b = db::CompanyAPI::getOrderById(a.id);
         CHECK(a.id == b.id);
@@ -170,10 +164,10 @@ TEST_CASE("Change structures") {
         auto company = db::CompanyAPI::createCompany("Zavod");
         auto employee = db::CompanyAPI::createEmployee(company.id, "Vasya");
         auto a = db::CompanyAPI::createOrder(company.id, "nogotochki",
-                                             randomNumber(), randomNumber(),
+                                             "2010-04-05 12:00:17", "12:00:17",
                                              employee.id);
 
-        auto newValue = randomNumber();
+        auto newValue = "12:00:17";
         db::CompanyAPI::changeOrderDuration(a.id, newValue);
         auto b = db::CompanyAPI::getOrderById(a.id);
         CHECK(a.id == b.id);
@@ -204,7 +198,7 @@ TEST_CASE("Booking and cancelling") {
                                               "vasya@mail.com");
     ;
     auto a = db::CompanyAPI::createOrder(
-        company.id, "nogotochki", randomNumber(), randomNumber(), employee.id);
+        company.id, "nogotochki", "2010-04-05 12:00:17", "12:00:17", employee.id);
     CHECK(isIn(db::CompanyAPI::listVacantOrdersOfCompany(company.id), a.id));
     CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee.id), a.id));
     CHECK(!isIn(db::CompanyAPI::listBookedOrdersOfCompany(company.id), a.id));

@@ -3,14 +3,16 @@
 
 #include <pqxx/pqxx>
 #include <set>
+#include <vector>
+#include <array>
 #include <unordered_map>
 #include "Entities.h"
 
 namespace db {
 
-enum Tables { clients, employees, orders, companies };
+enum Table { clients, employees, orders, companies };
 
-enum column {
+enum Column {
     name,
     fullName,
     phoneNumber,
@@ -30,13 +32,13 @@ public:
     std::string execute() const;
 
 protected:
-    Tables table;
+    Table table;
     std::stringstream s;
     bool canBeExecuted = false;
 
     Operation() = default;
 
-    std::string parseCol(column col);
+    std::string parseCol(Column col);
 };
 
 class Update : public Operation {
@@ -47,30 +49,30 @@ private:
 public:
     Update() = delete;
 
-    explicit Update(Tables t);
+    explicit Update(Table t);
 
-    Update &set(column col, const std::string &value);
+    Update &set(Column col, const std::string &value);
 
-    Update &set(column col, long long value);
+    Update &set(Column col, long long value);
 
-    Update &where(column col, const std::string &value);
+    Update &where(Column col, const std::string &value);
 
-    Update &where(column col, long long value);
+    Update &where(Column col, long long value);
 };
 
 class Insert : public Operation {
 private:
-    std::set<column> requiredCols;
-    std::unordered_map<column, std::string> currentValues;
+    std::set<Column> requiredCols;
+    std::unordered_map<Column, std::string> currentValues;
 
 public:
     Insert() = delete;
 
-    explicit Insert(Tables t);
+    explicit Insert(Table t);
 
-    Insert &set(column col, const std::string &value);
+    Insert &set(Column col, const std::string &value);
 
-    Insert &set(column col, long long value);
+    Insert &set(Column col, long long value);
 };
 
 class Select : public Operation {
@@ -82,15 +84,15 @@ private:
 public:
     Select() = delete;
 
-    explicit Select(Tables t);
+    explicit Select(Table t);
 
-    Select &columns(const std::vector<column> &cols);
+    Select &columns(const std::vector<Column> &cols);
 
-    Select &where(column col, const std::string &value);
+    Select &where(Column col, const std::string &value);
 
-    Select &where(column col, long long value);
+    Select &where(Column col, long long value);
 
-    Select &orderedBy(column col);
+    Select &orderedBy(Column col);
 };
 
 class Result {

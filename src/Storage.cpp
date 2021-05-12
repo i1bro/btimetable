@@ -1,6 +1,71 @@
 #include "btt/Storage.h"
+#include <iostream>
 
 namespace db {
+
+namespace {
+const std::vector<Column> stringColumns = {name,
+                                           fullName,
+                                           phoneNumber,
+                                           email,
+                                           title,
+                                           timeStart,
+                                           duration};
+
+const std::vector<Column> numericColumns = {id,
+                                            clientId,
+                                            companyId,
+                                            employeeId};
+
+std::unordered_map<Table, const std::string> nameOfTable = {
+        {clients, "clients"},
+        {employees, "employees"},
+        {orders, "orders"},
+        {companies, "companies"}
+};
+
+std::unordered_map<Table, const std::vector<Column>> columnsOfTable = {
+        {clients, {id,
+                        fullName,
+                        phoneNumber,
+                        email}},
+        {employees, {id,
+                     companyId,
+                     fullName}},
+        {orders, {id,
+                  companyId,
+                          title,
+                          duration,
+                          timeStart,
+                          clientId,
+                          employeeId}},
+        {companies, {id, name}}
+};
+
+std::unordered_map<Column, const std::string> nameOfColumn = {
+        {name, "name"},
+        {fullName, "full_name"},
+        {phoneNumber, "phone_number"},
+        {email, "email"},
+        {title, "title"},
+        {timeStart, "time_start"},
+        {duration, "duration"},
+        {clientId, "client_id"},
+        {companyId, "company_id"},
+        {employeeId, "employee_id"},
+        {id, "id"},
+        {all, "*"}
+};
+
+bool isIn(Column col, const std::vector<Column> &cols) {
+    for(auto c: cols) {
+        if(col == c) {
+            return true;
+        }
+    }
+    return false;
+}
+}
 
 std::string Operation::execute() const {
     if (!canBeExecuted) {
@@ -9,82 +74,19 @@ std::string Operation::execute() const {
     return s.str();
 }
 
-std::string Operation::parseCol(column col) {
-    if (col == id) {
-        return "id";
+std::string Operation::parseCol(Column col) {
+    if(col != all && !isIn(col, columnsOfTable[table])) {
+        throw std::invalid_argument("TODO");  // TODO
     }
-    if (col == all) {
-        return "*";
-    }
-    switch (table) {
-        case clients:
-            switch (col) {
-                case fullName:
-                    return "full_name";
-                case phoneNumber:
-                    return "phone_number";
-                case email:
-                    return "email";
-                default:
-                    throw std::invalid_argument("TODO");  // TODO
-            }
-        case employees:
-            switch (col) {
-                case companyId:
-                    return "company_id";
-                case fullName:
-                    return "full_name";
-                default:
-                    throw std::invalid_argument("TODO");  // TODO
-            }
-        case orders:
-            switch (col) {
-                case companyId:
-                    return "company_id";
-                case title:
-                    return "title";
-                case duration:
-                    return "duration";
-                case timeStart:
-                    return "time_start";
-                case clientId:
-                    return "client_id";
-                case employeeId:
-                    return "employee_id";
-                default:
-                    throw std::invalid_argument("TODO");  // TODO
-            }
-        case companies:
-            switch (col) {
-                case name:
-                    return "name";
-                default:
-                    throw std::invalid_argument("TODO");  // TODO
-            }
-    }
+    return nameOfColumn[col];
 }
 
-Update::Update(Tables t) {
+Update::Update(Table t) {
     table = t;
-    s << "UPDATE ";
-    switch (table) {
-        case clients:
-            s << "clients ";
-            break;
-        case employees:
-            s << "employees ";
-            break;
-        case orders:
-            s << "orders ";
-            break;
-        case companies:
-            s << "companies ";
-            break;
-    }
-    s << "SET ";
+    s << "UPDATE " << nameOfTable[table] << " SET ";
 }
 
-Update &Update::set(column col, const std::string &value) {
+Update &Update::set(Column col, const std::string &value) {
     if (whereUsed) {
         throw std::invalid_argument("TODO");  // TODO
     }
@@ -93,37 +95,53 @@ Update &Update::set(column col, const std::string &value) {
     } else {
         setUsed = true;
     }
-    s << parseCol(col) << " = " << value << " ";
+    if(isIn(col, stringColumns)) {
+        s << parseCol(col) << " = '" << value << "' ";
+    } else {
+        s << parseCol(col) << " = " << value << " ";
+    }
+    canBeExecuted = true;
     return *this;
 }
 
-Update &Update::set(column col, long long value) {
-    canBeExecuted = true;
-    if (col != clientId) {
+Update &Update::set(Column col, long long value) {
+    if (!isIn(col, numericColumns)) {
         throw std::invalid_argument("TODO");  // TODO
+    }
+    if(value == -1) {
+        return set(col, "NULL");
     }
     return set(col, std::to_string(value));
 }
 
-Update &Update::where(column col, const std::string &value) {
+Update &Update::where(Column col, const std::string &value) {
     if (whereUsed) {
         s << "AND ";
     } else {
         whereUsed = true;
         s << "WHERE ";
     }
-    s << parseCol(col) << " = " << value << " ";
+    if(value == "NULL" || value == "NOT NULL") {
+        s << parseCol(col) << " IS " << value << " ";
+    } else if(isIn(col, stringColumns)) {
+        s << parseCol(col) << " = '" << value << "' ";
+    } else {
+        s << parseCol(col) << " = " << value << " ";
+    }
     return *this;
 }
 
-Update &Update::where(column col, long long value) {
-    if (col != clientId && col != id) {
+Update &Update::where(Column col, long long value) {
+    if (!isIn(col, numericColumns)) {
         throw std::invalid_argument("TODO");  // TODO
+    }
+    if(value == -1) {
+        return where(col, "NULL");
     }
     return where(col, std::to_string(value));
 }
 
-Insert::Insert(Tables t) {
+Insert::Insert(Table t) {
     table = t;
     s << "INSERT INTO ";
     switch (table) {
@@ -136,7 +154,7 @@ Insert::Insert(Tables t) {
             requiredCols = {companyId, fullName};
             break;
         case orders:
-            s << "orders(company_id, title, time_start, duration, employeeId) ";
+            s << "orders(company_id, title, time_start, duration, employee_id) ";
             requiredCols = {companyId, title, timeStart, duration, employeeId};
             break;
         case companies:
@@ -147,12 +165,16 @@ Insert::Insert(Tables t) {
     s << "VALUES (";
 }
 
-Insert &Insert::set(column col, const std::string &value) {
+Insert &Insert::set(Column col, const std::string &value) {
     if (requiredCols.find(col) == requiredCols.end()) {
         throw std::invalid_argument("TODO");  // TODO
     }
     requiredCols.erase(col);
-    currentValues[col] = value;
+    if(isIn(col, stringColumns)) {
+        currentValues[col] = "'" + value + "'";
+    } else {
+        currentValues[col] = value;
+    }
     if (requiredCols.empty()) {
         switch (table) {
             case clients:
@@ -179,19 +201,22 @@ Insert &Insert::set(column col, const std::string &value) {
     return *this;
 }
 
-Insert &Insert::set(column col, long long value) {
-    if (col != employeeId && col != companyId) {
+Insert &Insert::set(Column col, long long value) {
+    if (!isIn(col, numericColumns)) {
         throw std::invalid_argument("TODO");  // TODO
+    }
+    if(value == -1) {
+        return set(col, "NULL");
     }
     return set(col, std::to_string(value));
 }
 
-Select::Select(Tables t) {
+Select::Select(Table t) {
     table = t;
     s << "SELECT ";
 }
 
-Select &Select::columns(const std::vector<column> &cols) {
+Select &Select::columns(const std::vector<Column> &cols) {
     if (columnsUsed || whereUsed || orderedUsed) {
         throw std::invalid_argument("TODO");  // TODO
     }
@@ -205,47 +230,39 @@ Select &Select::columns(const std::vector<column> &cols) {
         }
         s << parseCol(col);
     }
-    s << " FROM ";
-    switch (table) {
-        case clients:
-            s << "clients ";
-            break;
-        case employees:
-            s << "employees ";
-            break;
-        case orders:
-            s << "orders ";
-            break;
-        case companies:
-            s << "companies ";
-            break;
-    }
+    s << " FROM " << nameOfTable[table] << " ";
     canBeExecuted = true;
     return *this;
 }
 
-Select &Select::where(column col, const std::string &value) {
-    if (orderedUsed) {
-        throw std::invalid_argument("TODO");  // TODO
-    }
+Select &Select::where(Column col, const std::string &value) {
     if (whereUsed) {
         s << "AND ";
     } else {
         whereUsed = true;
         s << "WHERE ";
     }
-    s << parseCol(col) << " = " << value << " ";
+    if(value == "NULL" || value == "NOT NULL") {
+        s << parseCol(col) << " IS " << value << " ";
+    } else if(isIn(col, stringColumns)) {
+        s << parseCol(col) << " = '" << value << "' ";
+    } else {
+        s << parseCol(col) << " = " << value << " ";
+    }
     return *this;
 }
 
-Select &Select::where(column col, long long value) {
-    if (col != employeeId && col != companyId && col != clientId && col != id) {
+Select &Select::where(Column col, long long value) {
+    if (!isIn(col, numericColumns)) {
         throw std::invalid_argument("TODO");  // TODO
+    }
+    if(value == -1) {
+        return where(col, "NULL");
     }
     return where(col, std::to_string(value));
 }
 
-Select &Select::orderedBy(column col) {
+Select &Select::orderedBy(Column col) {
     if (orderedUsed) {
         throw std::invalid_argument("TODO");  // TODO
     }
@@ -273,7 +290,7 @@ Result &Result::operator=(pqxx::result &&res_) {
 }
 
 Employee Result::toEmployee() {
-    pqxx::row cur = res[0];
+    const pqxx::row &cur = res[0];
     Employee employee(cur["id"].as<long long>(),
                       cur["company_id"].as<long long>(),
                       cur["full_name"].c_str());
@@ -281,36 +298,35 @@ Employee Result::toEmployee() {
 }
 
 Client Result::toClient() {
-    pqxx::row cur = res[0];
+    const pqxx::row &cur = res[0];
     Client client(cur["id"].as<long long>(), cur["full_name"].c_str(),
                   cur["phone_number"].c_str(), cur["email"].c_str());
     return client;
 }
 
 Order Result::toOrder() {
-    pqxx::row cur = res[0];
+    const pqxx::row &cur = res[0];
     Order order(cur["id"].as<long long>(), cur["company_id"].as<long long>(),
-                cur["title"].c_str(), cur["timeStart"].c_str(),
-                cur["duration"].c_str(), cur["client_id"].as<long long>(),
+                cur["title"].c_str(), cur["time_start"].c_str(),
+                cur["duration"].c_str(), (cur["client_id"].is_null() ? -1 : cur["client_id"].as<long long>()),
                 cur["employee_id"].as<long long>());
     return order;
 }
 
 Company Result::toCompany() {
-    pqxx::row cur = res[0];
+    const pqxx::row &cur = res[0];
     Company company(cur["id"].as<long long>(), cur["name"].c_str());
     return company;
 }
 
 long long Result::toLL() {
-    pqxx::row cur = res[0];
-    return cur[0].as<long long>();
+    return res[0][0].as<long long>();
 }
 
 std::vector<long long> Result::toVecLL() {
     std::vector<long long> ans;
-    for (int i = 0; i < res.size(); i++) {
-        ans.push_back(res[0]["id"].as<long long>());
+    for (auto && re : res) {
+        ans.push_back(re["id"].as<long long>());
     }
     return ans;
 }
@@ -320,7 +336,9 @@ Result Storage::execute(const Operation &op) {
         pqxx::work W{C};
         Result res(W.exec(op.execute()));
         W.commit();
-    } catch (...) {
+        return res;
+    } catch (const std::exception& e) {
+        std::cerr << e.what();
         throw std::invalid_argument("TODO");  // TODO
     }
 }
@@ -362,14 +380,17 @@ long long Storage::createClient(const std::string &fullName_,
 }
 
 void Storage::storeEmployee(const Employee &employee) {
-    execute(Update(employees).set(fullName, employee.fullName));
+    execute(Update(employees)
+                .set(fullName, employee.fullName)
+                .where(id, employee.id));
 }
 
 void Storage::storeClient(const Client &client) {
     execute(Update(clients)
                 .set(fullName, client.fullName)
                 .set(phoneNumber, client.phoneNumber)
-                .set(email, client.email));
+                .set(email, client.email)
+                .where(id, client.id));
 }
 
 void Storage::storeOrder(const Order &order) {
@@ -378,11 +399,14 @@ void Storage::storeOrder(const Order &order) {
                 .set(timeStart, order.timeStart)
                 .set(duration, order.duration)
                 .set(clientId, order.clientId)
-                .set(employeeId, order.employeeId));
+                .set(employeeId, order.employeeId)
+                .where(id, order.id));
 }
 
 void Storage::storeCompany(const Company &company) {
-    execute(Update(companies).set(name, company.name));
+    execute(Update(companies)
+                .set(name, company.name)
+                .where(id, company.id));
 }
 
 Employee Storage::getEmployeeById(long long id_) {
@@ -419,6 +443,10 @@ void Storage::deleteCompany(long long id) {
 }
 
 std::vector<long long> Storage::listVacantOrdersOfCompany(long long id_) {
+    auto a = Select(orders)
+            .columns({id})
+            .where(companyId, id_)
+            .where(clientId, "NULL").execute();
     return execute(Select(orders)
                        .columns({id})
                        .where(companyId, id_)
