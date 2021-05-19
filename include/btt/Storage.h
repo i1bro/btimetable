@@ -134,62 +134,10 @@ private:
         "password=ihatepostgresql "
         "dbname=bttdb"};
 
+public:
     Result execute(const Operation &op);
 
-public:
     Storage() = default;
-
-    long long createCompany(const std::string &name);
-
-    long long createOrder(long long companyId,
-                          const std::string &title,
-                          const std::string &timeStart,
-                          const std::string &duration,
-                          long long employeeId);
-
-    long long createEmployee(long long companyId, const std::string &fullName);
-
-    long long createClient(const std::string &fullName,
-                           const std::string &phoneNumber,
-                           const std::string &email);
-
-    void storeEmployee(const Employee &employee);
-
-    void storeClient(const Client &client);
-
-    void storeOrder(const Order &order);
-
-    void storeCompany(const Company &company);
-
-    Employee getEmployeeById(long long id);
-
-    Client getClientById(long long id);
-
-    Order getOrderById(long long id);
-
-    Company getCompanyById(long long id);
-
-    void deleteEmployee(long long id);
-
-    void deleteClient(long long id);
-
-    void deleteOrder(long long id);
-
-    void deleteCompany(long long id);
-
-    std::vector<long long> listVacantOrdersOfCompany(long long employeeId);
-
-    std::vector<long long> listBookedOrdersOfCompany(long long employeeId);
-
-    std::vector<long long> listVacantOrdersOfEmployee(long long employeeId);
-
-    std::vector<long long> listBookedOrdersOfEmployee(long long employeeId);
-
-    std::vector<long long> listOrdersOfClient(long long clientId);
-
-    std::vector<long long> listCompanies();
-
-    std::vector<long long> listEmployeesOfCompany(long long id);
 };
 
 }  // namespace db
