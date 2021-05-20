@@ -59,7 +59,7 @@ public:
 
     static Company getCompanyById(long long id);
 
-    void deleteOrder(long long id);
+    static void deleteOrder(long long id);
 
     static std::vector<long long> listVacantOrdersOfEmployee(long long id);
 
