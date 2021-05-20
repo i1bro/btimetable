@@ -1,24 +1,26 @@
 #include "CompanyAPI.h"
-
 #include <utility>
 #include "btt/Service.h"
 
 namespace db {
 
-Company CompanyAPI::createCompany(const std::string& name) {
-    return Service::createCompany(name);
+Company CompanyAPI::createCompany(const std::string &phoneNumber,
+                                  const std::string &password,
+                                  const std::string &name) {
+    return Service::createCompany(phoneNumber, password, name);
 }
 
 Order CompanyAPI::createOrder(long long companyId,
-                              const std::string& title,
-                              const std::string& timeStart,
-                              const std::string& duration,
+                              const std::string &title,
+                              const std::string &timeStart,
+                              const std::string &duration,
                               long long employeeId) {
-    return Service::createOrder(companyId, title, timeStart,
-                                duration, employeeId);
+    return Service::createOrder(companyId, title, timeStart, duration,
+                                employeeId);
 }
 
-Employee CompanyAPI::createEmployee(long long companyId, const std::string& fullName) {
+Employee CompanyAPI::createEmployee(long long companyId,
+                                    const std::string &fullName) {
     return Service::createEmployee(companyId, fullName);
 }
 
@@ -84,5 +86,10 @@ std::vector<long long> CompanyAPI::listAllOrdersOfEmployee(long long id) {
 
 std::vector<long long> CompanyAPI::listEmployeesOfCompany(long long id) {
     return Service::listEmployeesOfCompany(id);
+}
+
+long long CompanyAPI::authorizeCompany(const std::string &phoneNumber,
+                                       const std::string &password) {
+    return Service::authorizeCompany(phoneNumber, password);
 }
 }  // namespace db

@@ -3,9 +3,15 @@
 
 namespace db {
 
-Company Service::createCompany(const std::string &name) {
+Company Service::createCompany(const std::string &phoneNumber,
+                               const std::string &password,
+                               const std::string &name) {
     long long resId =
         storage.execute(Insert(companies).set(Column::name, name)).toLL();
+    storage.execute(Insert(companyAccounts)
+                        .set(Column::phoneNumber, phoneNumber)
+                        .set(Column::password, password)
+                        .set(Column::companyId, resId));
     return getCompanyById(resId);
 }
 
@@ -35,8 +41,9 @@ Employee Service::createEmployee(long long companyId,
     return getEmployeeById(resId);
 }
 
-Client Service::createClient(const std::string &fullName,
-                             const std::string &phoneNumber,
+Client Service::createClient(const std::string &phoneNumber,
+                             const std::string &password,
+                             const std::string &fullName,
                              const std::string &email) {
     long long resId = storage
                           .execute(Insert(clients)
@@ -44,6 +51,10 @@ Client Service::createClient(const std::string &fullName,
                                        .set(Column::phoneNumber, phoneNumber)
                                        .set(Column::email, email))
                           .toLL();
+    storage.execute(Insert(clientAccounts)
+                        .set(Column::phoneNumber, phoneNumber)
+                        .set(Column::password, password)
+                        .set(Column::clientId, resId));
     return getClientById(resId);
 }
 
@@ -52,6 +63,7 @@ std::vector<long long> Service::listVacantOrdersOfCompany(long long id) {
         .execute(Select(orders)
                      .columns({Column::id})
                      .where(companyId, id)
+                     .where(isDeleted, "FALSE")
                      .where(clientId, -1))
         .toVecLL();
 }
@@ -61,13 +73,17 @@ std::vector<long long> Service::listBookedOrdersOfCompany(long long id) {
         .execute(Select(orders)
                      .columns({Column::id})
                      .where(companyId, id)
+                     .where(isDeleted, "FALSE")
                      .where(clientId, "NOT NULL"))
         .toVecLL();
 }
 
 std::vector<long long> Service::listAllOrdersOfCompany(long long id) {
     return storage
-        .execute(Select(orders).columns({Column::id}).where(companyId, id))
+        .execute(Select(orders)
+                     .columns({Column::id})
+                     .where(companyId, id)
+                     .where(isDeleted, "FALSE"))
         .toVecLL();
 }
 
@@ -127,7 +143,8 @@ std::vector<long long> Service::listVacantOrdersOfEmployee(long long id) {
         .execute(Select(orders)
                      .columns({Column::id})
                      .where(employeeId, id)
-                     .where(clientId, -1))
+                     .where(clientId, -1)
+                     .where(isDeleted, "FALSE"))
         .toVecLL();
 }
 
@@ -136,19 +153,26 @@ std::vector<long long> Service::listBookedOrdersOfEmployee(long long id) {
         .execute(Select(orders)
                      .columns({Column::id})
                      .where(employeeId, id)
-                     .where(clientId, "NOT NULL"))
+                     .where(clientId, "NOT NULL")
+                     .where(isDeleted, "FALSE"))
         .toVecLL();
 }
 
 std::vector<long long> Service::listAllOrdersOfEmployee(long long id) {
     return storage
-        .execute(Select(orders).columns({Column::id}).where(employeeId, id))
+        .execute(Select(orders)
+                     .columns({Column::id})
+                     .where(employeeId, id)
+                     .where(isDeleted, "FALSE"))
         .toVecLL();
 }
 
 std::vector<long long> Service::listOrdersOfClient(long long id) {
     return storage
-        .execute(Select(orders).columns({Column::id}).where(clientId, id))
+        .execute(Select(orders)
+                     .columns({Column::id})
+                     .where(clientId, id)
+                     .where(isDeleted, "FALSE"))
         .toVecLL();
 }
 
@@ -160,5 +184,36 @@ std::vector<long long> Service::listEmployeesOfCompany(long long id) {
     return storage
         .execute(Select(employees).columns({Column::id}).where(companyId, id))
         .toVecLL();
+}
+
+void Service::deleteOrder(long long id) {
+    storage.execute(
+        Update(orders).set(isDeleted, "TRUE").where(Column::id, id));
+}
+
+long long Service::authorizeClient(const std::string &phoneNumber,
+                                   const std::string &password) {
+    auto res = storage.execute(Select(clientAccounts)
+                                   .columns({clientId})
+                                   .where(Column::phoneNumber, phoneNumber)
+                                   .where(Column::password, password));
+    try {
+        return res.toLL();
+    } catch (...) {
+        return -1;
+    }
+}
+
+long long Service::authorizeCompany(const std::string &phoneNumber,
+                                    const std::string &password) {
+    auto res = storage.execute(Select(companyAccounts)
+                                   .columns({companyId})
+                                   .where(Column::phoneNumber, phoneNumber)
+                                   .where(Column::password, password));
+    try {
+        return res.toLL();
+    } catch (...) {
+        return -1;
+    }
 }
 }  // namespace db

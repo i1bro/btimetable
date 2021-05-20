@@ -4,23 +4,30 @@
 namespace db {
 
 namespace {
-const std::vector<Column> stringColumns = {name,  fullName,  phoneNumber, email,
-                                           title, timeStart, duration};
+const std::vector<Column> stringColumns = {name,     fullName,  phoneNumber,
+                                           email,    title,     timeStart,
+                                           duration, isDeleted, password};
 
-const std::vector<Column> numericColumns = {id, clientId, companyId,
-                                            employeeId};
+const std::vector<Column> numericColumns = {id,         clientId,  companyId,
+                                            employeeId, ratingSum, ratingCnt};
 
 std::unordered_map<Table, const std::string> nameOfTable = {
     {clients, "clients"},
     {employees, "employees"},
     {orders, "orders"},
-    {companies, "companies"}};
+    {companies, "companies"},
+    {clientAccounts, "client_accounts"},
+    {companyAccounts, "company_accounts"}};
 
 std::unordered_map<Table, const std::vector<Column>> columnsOfTable = {
     {clients, {id, fullName, phoneNumber, email}},
-    {employees, {id, companyId, fullName}},
-    {orders, {id, companyId, title, duration, timeStart, clientId, employeeId}},
-    {companies, {id, name}}};
+    {employees, {id, companyId, fullName, ratingSum, ratingCnt}},
+    {orders,
+     {id, companyId, title, duration, timeStart, clientId, employeeId,
+      isDeleted}},
+    {companies, {id, name}},
+    {clientAccounts, {phoneNumber, password, clientId}},
+    {companyAccounts, {phoneNumber, password, companyId}}};
 
 std::unordered_map<Column, const std::string> nameOfColumn = {
     {name, "name"},
@@ -34,6 +41,9 @@ std::unordered_map<Column, const std::string> nameOfColumn = {
     {companyId, "company_id"},
     {employeeId, "employee_id"},
     {id, "id"},
+    {ratingSum, "rating_sum"},
+    {ratingCnt, "rating_cnt"},
+    {isDeleted, "is_deleted"},
     {all, "*"}};
 
 bool isIn(Column col, const std::vector<Column> &cols) {
@@ -141,6 +151,14 @@ Insert::Insert(Table t) {
             s << "companies(name) ";
             requiredCols = {name};
             break;
+        case clientAccounts:
+            s << "client_accounts(phone_number, password, client_id) ";
+            requiredCols = {phoneNumber, password, clientId};
+            break;
+        case companyAccounts:
+            s << "company_accounts(phone_number, password, company_id) ";
+            requiredCols = {phoneNumber, password, companyId};
+            break;
     }
     s << "VALUES (";
 }
@@ -174,8 +192,20 @@ Insert &Insert::set(Column col, const std::string &value) {
             case companies:
                 s << currentValues[name];
                 break;
+            case clientAccounts:
+                s << currentValues[phoneNumber] << ", "
+                  << currentValues[password] << ", " << currentValues[clientId];
+                break;
+            case companyAccounts:
+                s << currentValues[phoneNumber] << ", "
+                  << currentValues[password] << ", "
+                  << currentValues[companyId];
+                break;
         }
-        s << ") RETURNING id";
+        s << ") ";
+        if (table != clientAccounts && table != companyAccounts) {
+            s << "RETURNING id";
+        }
         canBeExecuted = true;
     }
     return *this;

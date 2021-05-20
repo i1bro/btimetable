@@ -4,11 +4,11 @@
 int main() {
     try {
         pqxx::connection C(
-            "host=localhost "
-            "port=5432 "
-            "user=bttsu "
-            "password=ihatepostgresql "
-            "dbname=bttdb");
+            "host=retired.tk "
+            "port=58974 "
+            "user=postgres "
+            "password=T38ssGHzjcRviche7ex "
+            "dbname=postgres");
         std::cout << "Connected to " << C.dbname() << std::endl;
         pqxx::work W{C};
 
@@ -16,7 +16,9 @@ int main() {
             "DROP TABLE IF EXISTS companies CASCADE;"
             "DROP TABLE IF EXISTS clients CASCADE;"
             "DROP TABLE IF EXISTS employees CASCADE;"
-            "DROP TABLE IF EXISTS orders CASCADE;");
+            "DROP TABLE IF EXISTS orders CASCADE;"
+            "DROP TABLE IF EXISTS client_accounts CASCADE;"
+            "DROP TABLE IF EXISTS company_accounts CASCADE;");
 
         W.exec(
             "CREATE TABLE companies("
@@ -39,6 +41,8 @@ int main() {
             "id BIGINT GENERATED ALWAYS AS IDENTITY,"
             "company_id BIGINT NOT NULL,"
             "full_name VARCHAR(255) NOT NULL,"
+            "rating_sum BIGINT DEFAULT 0,"
+            "rating_cnt BIGINT DEFAULT 0,"
             "PRIMARY KEY(id),"
             "CONSTRAINT fk_company "
             "FOREIGN KEY(company_id) "
@@ -55,6 +59,7 @@ int main() {
             "duration TIME NOT NULL,"
             "client_id BIGINT,"
             "employee_id BIGINT NOT NULL,"
+            "is_deleted BOOLEAN DEFAULT FALSE,"
             "PRIMARY KEY(id),"
             "CONSTRAINT fk_company "
             "FOREIGN KEY(company_id) "
@@ -67,6 +72,30 @@ int main() {
             "CONSTRAINT fk_employee "
             "FOREIGN KEY(employee_id) "
             "REFERENCES employees(id) "
+            "ON DELETE CASCADE"
+            ")");
+
+        W.exec(
+            "CREATE TABLE client_accounts("
+            "phone_number VARCHAR(16) NOT NULL,"
+            "password VARCHAR(255) NOT NULL,"
+            "client_id BIGINT NOT NULL,"
+            "PRIMARY KEY(phone_number),"
+            "CONSTRAINT fk_client "
+            "FOREIGN KEY(client_id) "
+            "REFERENCES clients(id) "
+            "ON DELETE CASCADE"
+            ")");
+
+        W.exec(
+            "CREATE TABLE company_accounts("
+            "phone_number VARCHAR(16) NOT NULL,"
+            "password VARCHAR(255) NOT NULL,"
+            "company_id BIGINT NOT NULL,"
+            "PRIMARY KEY(phone_number),"
+            "CONSTRAINT fk_company "
+            "FOREIGN KEY(company_id) "
+            "REFERENCES companies(id) "
             "ON DELETE CASCADE"
             ")");
 

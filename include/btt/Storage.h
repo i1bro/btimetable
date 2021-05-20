@@ -1,16 +1,23 @@
 #ifndef BTIMETABLE_STORAGE_H
 #define BTIMETABLE_STORAGE_H
 
+#include <array>
 #include <pqxx/pqxx>
 #include <set>
-#include <vector>
-#include <array>
 #include <unordered_map>
+#include <vector>
 #include "Entities.h"
 
 namespace db {
 
-enum Table { clients, employees, orders, companies };
+enum Table {
+    clients,
+    employees,
+    orders,
+    companies,
+    clientAccounts,
+    companyAccounts
+};
 
 enum Column {
     name,
@@ -24,6 +31,10 @@ enum Column {
     companyId,
     employeeId,
     id,
+    password,
+    ratingSum,
+    ratingCnt,
+    isDeleted,
     all
 };
 
@@ -128,11 +139,11 @@ public:
 class Storage {
 private:
     pqxx::connection C{
-        "host=localhost "
-        "port=5432 "
-        "user=bttsu "
-        "password=ihatepostgresql "
-        "dbname=bttdb"};
+        "host=retired.tk "
+        "port=58974 "
+        "user=postgres "
+        "password=T38ssGHzjcRviche7ex "
+        "dbname=postgres"};
 
 public:
     Result execute(const Operation &op);

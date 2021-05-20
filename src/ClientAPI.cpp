@@ -3,11 +3,11 @@
 
 namespace db {
 
-Client ClientAPI::createClient(const std::string& fullName,
-                               const std::string& phoneNumber,
-                               const std::string& email) {
-    return Service::createClient(fullName, phoneNumber,
-                                 email);
+Client ClientAPI::createClient(const std::string &phoneNumber,
+                               const std::string &password,
+                               const std::string &fullName,
+                               const std::string &email) {
+    return Service::createClient(phoneNumber, password, fullName, email);
 }
 
 std::vector<long long> ClientAPI::listCompanies() {
@@ -74,6 +74,11 @@ std::vector<long long> ClientAPI::listOrdersOfClient(long long id) {
 
 std::vector<long long> ClientAPI::listVacantOrdersOfEmployee(long long id) {
     return Service::listVacantOrdersOfEmployee(id);
+}
+
+long long ClientAPI::authorizeClient(const std::string &phoneNumber,
+                                     const std::string &password) {
+    return Service::authorizeClient(phoneNumber, password);
 }
 
 }  // namespace db
