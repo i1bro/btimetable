@@ -3,33 +3,25 @@ project(btimetable)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_library(hiredis STATIC IMPORTED)
-add_library(redis++ STATIC IMPORTED)
-#find_package(PostgreSQL REQUIRED)
-#find_package(libpqxx REQUIRED)
-#add_library(pqxx STATIC IMPORTED)
-#add_library(pq STATIC IMPORTED)
-
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpqxx -lpq")
-
 IF (WIN32)
-    set_target_properties(hiredis PROPERTIES IMPORTED_LOCATION ../../../lib/hiredis_static.lib)
-    set_target_properties(redis++ PROPERTIES IMPORTED_LOCATION ../../../lib/redis++_static.lib)
-    #set_target_properties(pqxx PROPERTIES IMPORTED_LOCATION ../../../lib/pqxx.lib)
+    find_package(PostgreSQL REQUIRED)
+    add_library(pqxx STATIC IMPORTED)
+    set_target_properties(pqxx PROPERTIES IMPORTED_LOCATION ../../../lib/pqxx.lib)
+    set(PQXX_LIB pqxx)
+    set(PQ_LIB PostgreSQL::PostgreSQL)
 ELSE()
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpqxx -lpq")
     set(PQXX /usr/local/include/pqxx)
-    set_target_properties(redis++ PROPERTIES IMPORTED_LOCATION ../lib/libredis++.a)
-    set_target_properties(hiredis PROPERTIES IMPORTED_LOCATION ../lib/libhiredis.a)
-    #set_target_properties(pqxx PROPERTIES IMPORTED_LOCATION ../lib/libpqxx-7.5.a)
-    #set_target_properties(pq PROPERTIES IMPORTED_LOCATION ../lib/libpq.a)
+    find_library(PQXX_LIB pqxx)
+    find_library(PQ_LIB pq)
 ENDIF()
-
-find_library(PQXX_LIB pqxx)
-find_library(PQ_LIB pq)
 
 add_executable(init-db initDB.cpp)
 
-target_link_libraries(init-db  ${PQXX_LIB} ${PQ_LIB})
+target_link_libraries(init-db ${PQXX_LIB} ${PQ_LIB})
+IF (WIN32)
+    target_link_libraries(init-db ws2_32.lib)
+ENDIF()
 target_include_directories(init-db PRIVATE include include/postgresql)
 
 add_executable(data-base-test
@@ -40,8 +32,11 @@ add_executable(data-base-test
         src/Storage.cpp
         src/Service.cpp)
 
-target_link_libraries(data-base-test hiredis redis++ ${PQXX_LIB} ${PQ_LIB})
-target_include_directories(data-base-test PRIVATE include)
+target_link_libraries(data-base-test ${PQXX_LIB} ${PQ_LIB})
+IF (WIN32)
+    target_link_libraries(init-db ws2_32.lib)
+ENDIF()
+target_include_directories(data-base-test PRIVATE include include/postgresql)
 
 add_library(btt STATIC
         src/ClientAPI.cpp
@@ -49,5 +44,8 @@ add_library(btt STATIC
         src/Service.cpp
         src/Storage.cpp)
 
-target_link_libraries(btt hiredis redis++ ${PQXX_LIB} ${PQ_LIB})
-target_include_directories(btt PRIVATE include)
+target_link_libraries(btt ${PQXX_LIB} ${PQ_LIB})
+IF (WIN32)
+    target_link_libraries(init-db ws2_32.lib)
+ENDIF()
+target_include_directories(btt PRIVATE include include/postgresql)

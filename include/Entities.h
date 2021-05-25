@@ -50,8 +50,8 @@ public:
     const long long id = 0;
     long long companyId = 0;
     std::string title;
-    std::string timeStart;
-    std::string duration;
+    long long timeStart;
+    long long duration;
     long long clientId = -1;
     long long employeeId = -1;
 
@@ -61,29 +61,29 @@ public:
     Order(long long id_,
           long long companyId_,
           std::string title_,
-          std::string timeStart_,
-          std::string duration_,
+          long long timeStart_,
+          long long duration_,
           long long employeeId_)
         : id(id_),
           companyId(companyId_),
           title(std::move(title_)),
-          timeStart(std::move(timeStart_)),
-          duration(std::move(duration_)),
+          timeStart(timeStart_),
+          duration(duration_),
           employeeId(employeeId_) {
     }
 
     Order(long long id_,
           long long companyId_,
           std::string title_,
-          std::string timeStart_,
-          std::string duration_,
+          long long timeStart_,
+          long long duration_,
           long long clientId_,
           long long employeeId_)
         : id(id_),
           companyId(companyId_),
           title(std::move(title_)),
-          timeStart(std::move(timeStart_)),
-          duration(std::move(duration_)),
+          timeStart(timeStart_),
+          duration(duration_),
           clientId(clientId_),
           employeeId(employeeId_) {
     }

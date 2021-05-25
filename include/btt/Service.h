@@ -19,8 +19,8 @@ public:
 
     static Order createOrder(long long companyId,
                              const std::string &title,
-                             const std::string &timeStart,
-                             const std::string &duration,
+                             long long timeStart,
+                             long long duration,
                              long long employeeId);
 
     static Employee createEmployee(long long companyId,

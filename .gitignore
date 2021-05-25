@@ -47,5 +47,7 @@ btimetable.cbp
 /.vs/
 /out/
 /include/hiredis/
-/include/sw/
 /include/nlohmann/
+/include/postgresql/
+/include/pqxx/
+/include/sw/

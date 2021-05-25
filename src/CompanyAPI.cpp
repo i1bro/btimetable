@@ -12,8 +12,8 @@ Company CompanyAPI::createCompany(const std::string &phoneNumber,
 
 Order CompanyAPI::createOrder(long long companyId,
                               const std::string &title,
-                              const std::string &timeStart,
-                              const std::string &duration,
+                              long long timeStart,
+                              long long duration,
                               long long employeeId) {
     return Service::createOrder(companyId, title, timeStart, duration,
                                 employeeId);
@@ -54,15 +54,15 @@ void CompanyAPI::changeOrderTitle(long long id, std::string title) {
     Service::saveOrder(order);
 }
 
-void CompanyAPI::changeOrderTimeStart(long long id, std::string timeStart) {
+void CompanyAPI::changeOrderTimeStart(long long id, long long timeStart) {
     auto order = Service::getOrderById(id);
-    order.timeStart = std::move(timeStart);
+    order.timeStart = timeStart;
     Service::saveOrder(order);
 }
 
-void CompanyAPI::changeOrderDuration(long long id, std::string duration) {
+void CompanyAPI::changeOrderDuration(long long id, long long duration) {
     auto order = Service::getOrderById(id);
-    order.duration = std::move(duration);
+    order.duration = duration;
     Service::saveOrder(order);
 }
 
@@ -70,6 +70,10 @@ void CompanyAPI::changeEmployeeFullName(long long id, std::string fullName) {
     auto employee = Service::getEmployeeById(id);
     employee.fullName = std::move(fullName);
     Service::saveEmployee(employee);
+}
+
+void CompanyAPI::deleteOrder(long long id) {
+    Service::deleteOrder(id);
 }
 
 std::vector<long long> CompanyAPI::listVacantOrdersOfEmployee(long long id) {
@@ -92,4 +96,5 @@ long long CompanyAPI::authorizeCompany(const std::string &phoneNumber,
                                        const std::string &password) {
     return Service::authorizeCompany(phoneNumber, password);
 }
+
 }  // namespace db

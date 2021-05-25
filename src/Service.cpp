@@ -17,8 +17,8 @@ Company Service::createCompany(const std::string &phoneNumber,
 
 Order Service::createOrder(long long companyId,
                            const std::string &title,
-                           const std::string &timeStart,
-                           const std::string &duration,
+                           long long timeStart,
+                           long long duration,
                            long long employeeId) {
     long long resId = storage
                           .execute(Insert(orders)

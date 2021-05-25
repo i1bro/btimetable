@@ -5,10 +5,9 @@ namespace db {
 
 namespace {
 const std::vector<Column> stringColumns = {name,     fullName,  phoneNumber,
-                                           email,    title,     timeStart,
-                                           duration, isDeleted, password};
+                                           email,    title, isDeleted, password};
 
-const std::vector<Column> numericColumns = {id,         clientId,  companyId,
+const std::vector<Column> numericColumns = {id, timeStart, duration, clientId,  companyId,
                                             employeeId, ratingSum, ratingCnt};
 
 std::unordered_map<Table, const std::string> nameOfTable = {
@@ -44,6 +43,7 @@ std::unordered_map<Column, const std::string> nameOfColumn = {
     {ratingSum, "rating_sum"},
     {ratingCnt, "rating_cnt"},
     {isDeleted, "is_deleted"},
+    {password, "password"},
     {all, "*"}};
 
 bool isIn(Column col, const std::vector<Column> &cols) {
@@ -318,8 +318,8 @@ Order Result::toOrder() {
     const pqxx::row &cur = res[0];
     Order order(
         cur["id"].as<long long>(), cur["company_id"].as<long long>(),
-        cur["title"].c_str(), cur["time_start"].c_str(),
-        cur["duration"].c_str(),
+        cur["title"].c_str(), cur["time_start"].as<long long>(),
+        cur["duration"].as<long long>(),
         (cur["client_id"].is_null() ? -1 : cur["client_id"].as<long long>()),
         cur["employee_id"].as<long long>());
     return order;
