@@ -1,14 +1,28 @@
 #ifndef BTIMETABLE_STORAGE_H
 #define BTIMETABLE_STORAGE_H
 
-#include <array>
+#include <exception>
 #include <pqxx/pqxx>
-#include <set>
 #include <unordered_map>
 #include <vector>
 #include "Entities.h"
 
 namespace db {
+
+struct buildingQueryError : std::runtime_error {
+    buildingQueryError()
+        : std::runtime_error(
+              "Please message me what did you do to get this exception") {
+    }
+};
+
+struct processingQueryError : std::runtime_error {
+    processingQueryError()
+        : std::runtime_error(
+              "pqxx thrown an exception while processing query. Input might be "
+              "corrupted") {
+    }
+};
 
 enum Table {
     clients,
@@ -32,33 +46,29 @@ enum Column {
     employeeId,
     id,
     password,
+    rating,
     ratingSum,
     ratingCnt,
-    isDeleted,
+    status,
     all
 };
 
 class Operation {
 public:
-    std::string execute() const;
+    virtual std::string build() = 0;
 
 protected:
     Table table;
-    std::stringstream s;
-    bool canBeExecuted = false;
-
-    Operation() = default;
-
-    std::string parseCol(Column col);
 };
 
 class Update : public Operation {
 private:
-    bool setUsed = false;
-    bool whereUsed = false;
+    std::vector<std::pair<Column, std::string>> values, conditions;
 
 public:
     Update() = delete;
+
+    std::string build() override;
 
     explicit Update(Table t);
 
@@ -66,44 +76,64 @@ public:
 
     Update &set(Column col, long long value);
 
+    Update &setNull(Column col);
+
     Update &where(Column col, const std::string &value);
 
-    Update &where(Column col, long long value);
+    Update &where(Column col, long long value, const std::string &op = "=");
+
+    Update &whereIsNull(Column col);
+
+    Update &whereIsNotNull(Column col);
 };
 
 class Insert : public Operation {
 private:
-    std::set<Column> requiredCols;
-    std::unordered_map<Column, std::string> currentValues;
+    std::vector<std::pair<Column, std::string>> values;
+    Column returnCol = all;
 
 public:
     Insert() = delete;
+
+    std::string build() override;
 
     explicit Insert(Table t);
 
     Insert &set(Column col, const std::string &value);
 
     Insert &set(Column col, long long value);
+
+    Insert &setNull(Column col);
+
+    Insert &returning(Column col);
 };
 
 class Select : public Operation {
 private:
-    bool columnsUsed = false;
-    bool whereUsed = false;
-    bool orderedUsed = false;
+    std::vector<Column> cols;
+    std::vector<std::pair<Column, std::string>> conditions;
+    std::vector<std::string> orderStr;
 
 public:
     Select() = delete;
 
+    std::string build() override;
+
     explicit Select(Table t);
 
-    Select &columns(const std::vector<Column> &cols);
+    Select &columns(const std::vector<Column> &cols_);
 
     Select &where(Column col, const std::string &value);
 
-    Select &where(Column col, long long value);
+    Select &where(Column col, long long value, const std::string &op = "=");
 
-    Select &orderedBy(Column col);
+    Select &whereIsNull(Column col);
+
+    Select &whereIsNotNull(Column col);
+
+    Select &orderedBy(Column col, bool reversed = false);
+
+    Select &orderedBy(const std::string &condition);
 };
 
 class Result {
@@ -146,7 +176,7 @@ private:
         "dbname=postgres"};
 
 public:
-    Result execute(const Operation &op);
+    Result execute(Operation &op);
 
     Storage() = default;
 };

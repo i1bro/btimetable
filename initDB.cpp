@@ -24,6 +24,8 @@ int main() {
             "CREATE TABLE companies("
             "id BIGINT GENERATED ALWAYS AS IDENTITY,"
             "name VARCHAR(255) NOT NULL,"
+            "rating_sum BIGINT DEFAULT 0,"
+            "rating_cnt BIGINT DEFAULT 0,"
             "PRIMARY KEY(id)"
             ")");
 
@@ -57,9 +59,10 @@ int main() {
             "title VARCHAR(255) NOT NULL,"
             "time_start BIGINT NOT NULL,"
             "duration BIGINT NOT NULL,"
-            "client_id BIGINT,"
+            "client_id BIGINT DEFAULT NULL,"
             "employee_id BIGINT NOT NULL,"
-            "is_deleted BOOLEAN DEFAULT FALSE,"
+            "status INT DEFAULT 0,"
+            "rating INT DEFAULT 0,"
             "PRIMARY KEY(id),"
             "CONSTRAINT fk_company "
             "FOREIGN KEY(company_id) "

@@ -3,10 +3,10 @@
 
 namespace db {
 
-Client ClientAPI::createClient(const std::string &phoneNumber,
-                               const std::string &password,
-                               const std::string &fullName,
-                               const std::string &email) {
+long long ClientAPI::createClient(const std::string &phoneNumber,
+                                  const std::string &password,
+                                  const std::string &fullName,
+                                  const std::string &email) {
     return Service::createClient(phoneNumber, password, fullName, email);
 }
 
@@ -23,15 +23,15 @@ std::vector<long long> ClientAPI::listEmployeesOfCompany(long long id) {
 }
 
 void ClientAPI::bookOrder(long long orderId, long long clientId) {
-    auto order = Service::getOrderById(orderId);
-    order.clientId = clientId;
-    Service::saveOrder(order);
+    Service::bookOrder(orderId, clientId);
 }
 
 void ClientAPI::cancelOrder(long long orderId) {
-    auto order = Service::getOrderById(orderId);
-    order.clientId = -1;
-    Service::saveOrder(order);
+    Service::cancelOrder(orderId);
+}
+
+void ClientAPI::rateOrder(long long id, int rating) {
+    Service::rateOrder(id, rating);
 }
 
 Client ClientAPI::getClientById(long long id) {
@@ -79,6 +79,17 @@ std::vector<long long> ClientAPI::listVacantOrdersOfEmployee(long long id) {
 long long ClientAPI::authorizeClient(const std::string &phoneNumber,
                                      const std::string &password) {
     return Service::authorizeClient(phoneNumber, password);
+}
+
+std::vector<long long> ClientAPI::listOrders(long long int companyId,
+                                             long long int employeeId,
+                                             Order::statusEnum status,
+                                             long long int leastTimeStart,
+                                             long long int leastDuration,
+                                             sortParam sortBy,
+                                             bool reversed) {
+    return Service::listOrders(companyId, employeeId, status, leastTimeStart,
+                               leastDuration, sortBy, reversed);
 }
 
 }  // namespace db

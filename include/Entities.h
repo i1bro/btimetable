@@ -7,31 +7,45 @@
 
 namespace db {
 
+enum sortParam {
+    byId,
+    byTimeStart,
+    byDuration,
+    byCompanyRating,
+    byEmployeeRating,
+    byCompanyName,
+    byEmployeeName
+};
+
 class Employee {
 private:
 public:
-    const long long id = 0;
-    long long companyId = 0;
+    const long long id;
+    long long companyId;
     std::string fullName;
+    double rating;
+    long long ratingCnt;
 
-    explicit Employee(long long id_) : id(id_) {
-    }
-
-    Employee(long long id_, long long companyId_, std::string fullName_)
-        : id(id_), companyId(companyId_), fullName(std::move(fullName_)) {
+    Employee(long long id_,
+             long long companyId_,
+             std::string fullName_,
+             double rating_,
+             long long ratingCnt_)
+        : id(id_),
+          companyId(companyId_),
+          fullName(std::move(fullName_)),
+          rating(rating_),
+          ratingCnt(ratingCnt_) {
     }
 };
 
 class Client {
 private:
 public:
-    const long long id = 0;
+    const long long id;
     std::string fullName;
     std::string phoneNumber;
     std::string email;
-
-    explicit Client(long long id_) : id(id_) {
-    }
 
     Client(long long id_,
            std::string fullName_,
@@ -47,29 +61,34 @@ public:
 class Order {
 private:
 public:
-    const long long id = 0;
-    long long companyId = 0;
+    enum statusEnum { vacant = 0, deleted = -1, booked = 1 };
+
+    const long long id;
+    long long companyId;
     std::string title;
     long long timeStart;
     long long duration;
-    long long clientId = -1;
-    long long employeeId = -1;
-
-    explicit Order(long long id_) : id(id_) {
-    }
+    long long clientId;
+    long long employeeId;
+    statusEnum status = vacant;
+    int rating;
 
     Order(long long id_,
           long long companyId_,
           std::string title_,
           long long timeStart_,
           long long duration_,
-          long long employeeId_)
+          long long employeeId_,
+          statusEnum status_,
+          int rating_)
         : id(id_),
           companyId(companyId_),
           title(std::move(title_)),
           timeStart(timeStart_),
           duration(duration_),
-          employeeId(employeeId_) {
+          employeeId(employeeId_),
+          status(status_),
+          rating(rating_) {
     }
 
     Order(long long id_,
@@ -78,28 +97,37 @@ public:
           long long timeStart_,
           long long duration_,
           long long clientId_,
-          long long employeeId_)
+          long long employeeId_,
+          statusEnum status_,
+          int rating_)
         : id(id_),
           companyId(companyId_),
           title(std::move(title_)),
           timeStart(timeStart_),
           duration(duration_),
           clientId(clientId_),
-          employeeId(employeeId_) {
+          employeeId(employeeId_),
+          status(status_),
+          rating(rating_) {
     }
 };
 
 class Company {
 private:
 public:
-    const long long id = 0;
+    const long long id;
     std::string name;
+    double rating;
+    long long ratingCnt;
 
-    explicit Company(long long id_) : id(id_) {
-    }
-
-    explicit Company(long long id_, std::string name_)
-        : id(id_), name(std::move(name_)) {
+    Company(long long id_,
+            std::string name_,
+            double rating_,
+            long long ratingCnt_)
+        : id(id_),
+          name(std::move(name_)),
+          rating(rating_),
+          ratingCnt(ratingCnt_) {
     }
 };
 

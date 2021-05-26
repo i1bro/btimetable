@@ -18,226 +18,210 @@ bool isIn(const std::vector<long long> &a, long long b) {
 
 TEST_CASE("Create structures") {
     SUBCASE("Client") {
-        auto a = db::ClientAPI::createClient("+7-987-654-32-10", "password",
-                                             "Vasya", "vasya@mail.com");
-        CHECK(db::ClientAPI::listOrdersOfClient(a.id).empty());
+        auto id = db::ClientAPI::createClient("+7-987-654-32-10", "password",
+                                              "Vasya", "vasya@mail.com");
+        CHECK(db::ClientAPI::listOrdersOfClient(id).empty());
 
-        auto b = db::ClientAPI::getClientById(a.id);
-        CHECK(a.id == b.id);
-        CHECK(a.fullName == b.fullName);
-        CHECK(a.email == b.email);
-        CHECK(a.phoneNumber == b.phoneNumber);
+        auto b = db::ClientAPI::getClientById(id);
+        CHECK(id == b.id);
+        CHECK("Vasya" == b.fullName);
+        CHECK("vasya@mail.com" == b.email);
+        CHECK("+7-987-654-32-10" == b.phoneNumber);
     }
 
     SUBCASE("Company") {
-        auto a = db::CompanyAPI::createCompany("+7-987-654-32-11", "password",
-                                               "Tuturu");
-        CHECK(isIn(db::ClientAPI::listCompanies(), a.id));
+        auto id = db::CompanyAPI::createCompany("+7-987-654-32-11", "password",
+                                                "Tuturu");
+        CHECK(isIn(db::ClientAPI::listCompanies(), id));
 
-        auto b = db::CompanyAPI::getCompanyById(a.id);
-        CHECK(a.id == b.id);
-        CHECK(a.name == b.name);
+        auto b = db::CompanyAPI::getCompanyById(id);
+        CHECK(id == b.id);
+        CHECK("Tuturu" == b.name);
     }
 
     SUBCASE("Employee") {
         auto company = db::CompanyAPI::createCompany("+7-987-654-32-12",
                                                      "password", "Zavod");
-        auto a = db::CompanyAPI::createEmployee(company.id, "Vasya");
-        CHECK(isIn(db::CompanyAPI::listEmployeesOfCompany(company.id), a.id));
-        CHECK(a.companyId == company.id);
+        auto id = db::CompanyAPI::createEmployee(company, "Vasya");
+        CHECK(isIn(db::CompanyAPI::listEmployeesOfCompany(company), id));
 
-        auto b = db::CompanyAPI::getEmployeeById(a.id);
-        CHECK(a.id == b.id);
-        CHECK(a.fullName == b.fullName);
-        CHECK(a.companyId == b.companyId);
+        auto b = db::CompanyAPI::getEmployeeById(id);
+        CHECK(id == b.id);
+        CHECK("Vasya" == b.fullName);
+        CHECK(company == b.companyId);
     }
 
     SUBCASE("Order") {
         auto company = db::CompanyAPI::createCompany("+7-987-654-32-13",
                                                      "password", "Zavod");
-        auto employee = db::CompanyAPI::createEmployee(company.id, "Vasya");
-        auto a = db::CompanyAPI::createOrder(company.id, "nogotochki",
-                                             1, 2,
-                                             employee.id);
-        CHECK(
-            isIn(db::CompanyAPI::listVacantOrdersOfCompany(company.id), a.id));
-        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee.id),
-                   a.id));
-        CHECK(a.companyId == company.id);
-        CHECK(a.employeeId == employee.id);
-        CHECK(a.clientId == -1);
+        auto employee = db::CompanyAPI::createEmployee(company, "Vasya");
+        auto id =
+            db::CompanyAPI::createOrder(company, "nogotochki", 1, 2, employee);
+        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfCompany(company), id));
+        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee), id));
 
-        auto b = db::CompanyAPI::getOrderById(a.id);
-        CHECK(a.id == b.id);
-        CHECK(a.title == b.title);
-        CHECK(a.companyId == b.companyId);
-        CHECK(a.timeStart == b.timeStart);
-        CHECK(a.duration == b.duration);
-        CHECK(a.employeeId == b.employeeId);
-        CHECK(a.clientId == b.clientId);
+        auto b = db::CompanyAPI::getOrderById(id);
+        CHECK(id == b.id);
+        CHECK("nogotochki" == b.title);
+        CHECK(company == b.companyId);
+        CHECK(1 == b.timeStart);
+        CHECK(2 == b.duration);
+        CHECK(employee == b.employeeId);
+        CHECK(-1 == b.clientId);
 
-        auto c = db::CompanyAPI::createOrder(
-            company.id, "1234", 1, 2, employee.id);
-        auto d = db::CompanyAPI::createOrder(
-            company.id, "1234", 1, 2, employee.id);
-        CHECK(
-            isIn(db::CompanyAPI::listVacantOrdersOfCompany(company.id), c.id));
-        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee.id),
-                   c.id));
-        CHECK(
-            isIn(db::CompanyAPI::listVacantOrdersOfCompany(company.id), d.id));
-        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee.id),
-                   d.id));
+        auto c = db::CompanyAPI::createOrder(company, "1234", 1, 2, employee);
+        auto d = db::CompanyAPI::createOrder(company, "1234", 1, 2, employee);
+        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfCompany(company), c));
+        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee), c));
+        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfCompany(company), d));
+        CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee), d));
     }
 }
 
 TEST_CASE("Change structures") {
     SUBCASE("Client email") {
-        auto a = db::ClientAPI::createClient("+7-987-654-32-14", "password",
-                                             "Vasya", "vasya@mail.com");
+        auto id = db::ClientAPI::createClient("+7-987-654-32-14", "password",
+                                              "Vasya", "vasya@mail.com");
 
-        db::ClientAPI::changeClientEmail(a.id, "petya@mail.com");
-        auto b = db::ClientAPI::getClientById(a.id);
-        CHECK(a.id == b.id);
-        CHECK(a.fullName == b.fullName);
+        db::ClientAPI::changeClientEmail(id, "petya@mail.com");
+        auto b = db::ClientAPI::getClientById(id);
+        CHECK(id == b.id);
+        CHECK("Vasya" == b.fullName);
         CHECK(b.email == "petya@mail.com");
-        CHECK(a.phoneNumber == b.phoneNumber);
+        CHECK("+7-987-654-32-14" == b.phoneNumber);
     }
 
     SUBCASE("Client fullName") {
-        auto a = db::ClientAPI::createClient("+7-987-654-32-15", "password",
-                                             "Vasya", "vasya@mail.com");
+        auto id = db::ClientAPI::createClient("+7-987-654-32-15", "password",
+                                              "Vasya", "vasya@mail.com");
 
-        db::ClientAPI::changeClientFullName(a.id, "Petya");
-        auto b = db::ClientAPI::getClientById(a.id);
-        CHECK(a.id == b.id);
+        db::ClientAPI::changeClientFullName(id, "Petya");
+        auto b = db::ClientAPI::getClientById(id);
+        CHECK(id == b.id);
         CHECK(b.fullName == "Petya");
-        CHECK(a.email == b.email);
-        CHECK(a.phoneNumber == b.phoneNumber);
+        CHECK("vasya@mail.com" == b.email);
+        CHECK("+7-987-654-32-15" == b.phoneNumber);
     }
 
     SUBCASE("Client phoneNumber") {
-        auto a = db::ClientAPI::createClient("+7-987-654-32-16", "password",
-                                             "Vasya", "vasya@mail.com");
+        auto id = db::ClientAPI::createClient("+7-987-654-32-16", "password",
+                                              "Vasya", "vasya@mail.com");
 
-        db::ClientAPI::changeClientPhoneNumber(a.id, "+7-012-345-67-89");
-        auto b = db::ClientAPI::getClientById(a.id);
-        CHECK(a.id == b.id);
-        CHECK(a.fullName == b.fullName);
-        CHECK(a.email == b.email);
+        db::ClientAPI::changeClientPhoneNumber(id, "+7-012-345-67-89");
+        auto b = db::ClientAPI::getClientById(id);
+        CHECK(id == b.id);
+        CHECK("Vasya" == b.fullName);
+        CHECK("vasya@mail.com" == b.email);
         CHECK(b.phoneNumber == "+7-012-345-67-89");
     }
 
     SUBCASE("Order title") {
         auto company = db::CompanyAPI::createCompany("+7-987-654-32-17",
                                                      "password", "Zavod");
-        auto employee = db::CompanyAPI::createEmployee(company.id, "Vasya");
-        auto a = db::CompanyAPI::createOrder(company.id, "nogotochki",
-                                             1, 2,
-                                             employee.id);
+        auto employee = db::CompanyAPI::createEmployee(company, "Vasya");
+        auto id =
+            db::CompanyAPI::createOrder(company, "nogotochki", 1, 2, employee);
 
-        db::CompanyAPI::changeOrderTitle(a.id, "-____-");
-        auto b = db::CompanyAPI::getOrderById(a.id);
-        CHECK(a.id == b.id);
+        db::CompanyAPI::changeOrderTitle(id, "-____-");
+        auto b = db::CompanyAPI::getOrderById(id);
+        CHECK(id == b.id);
         CHECK(b.title == "-____-");
-        CHECK(a.companyId == b.companyId);
-        CHECK(a.timeStart == b.timeStart);
-        CHECK(a.duration == b.duration);
-        CHECK(a.employeeId == b.employeeId);
-        CHECK(a.clientId == b.clientId);
+        CHECK(company == b.companyId);
+        CHECK(1 == b.timeStart);
+        CHECK(2 == b.duration);
+        CHECK(employee == b.employeeId);
+        CHECK(-1 == b.clientId);
     }
 
     SUBCASE("Order timeStart") {
         auto company = db::CompanyAPI::createCompany("+7-987-654-32-18",
                                                      "password", "Zavod");
-        auto employee = db::CompanyAPI::createEmployee(company.id, "Vasya");
-        auto a = db::CompanyAPI::createOrder(company.id, "nogotochki",
-                                             1, 2,
-                                             employee.id);
+        auto employee = db::CompanyAPI::createEmployee(company, "Vasya");
+        auto id =
+            db::CompanyAPI::createOrder(company, "nogotochki", 1, 2, employee);
 
         auto newValue = 3;
-        db::CompanyAPI::changeOrderTimeStart(a.id, newValue);
-        auto b = db::CompanyAPI::getOrderById(a.id);
-        CHECK(a.id == b.id);
-        CHECK(a.title == b.title);
-        CHECK(a.companyId == b.companyId);
+        db::CompanyAPI::changeOrderTimeStart(id, newValue);
+        auto b = db::CompanyAPI::getOrderById(id);
+        CHECK(id == b.id);
+        CHECK("nogotochki" == b.title);
+        CHECK(company == b.companyId);
         CHECK(b.timeStart == newValue);
-        CHECK(a.clientId == b.clientId);
-        CHECK(a.duration == b.duration);
-        CHECK(a.employeeId == b.employeeId);
+        CHECK(2 == b.duration);
+        CHECK(employee == b.employeeId);
+        CHECK(-1 == b.clientId);
     }
 
     SUBCASE("Order duration") {
         auto company = db::CompanyAPI::createCompany("+7-987-654-32-19",
                                                      "password", "Zavod");
-        auto employee = db::CompanyAPI::createEmployee(company.id, "Vasya");
-        auto a = db::CompanyAPI::createOrder(company.id, "nogotochki",
-                                             1, 2,
-                                             employee.id);
+        auto employee = db::CompanyAPI::createEmployee(company, "Vasya");
+        auto id =
+            db::CompanyAPI::createOrder(company, "nogotochki", 1, 2, employee);
 
         auto newValue = 3;
-        db::CompanyAPI::changeOrderDuration(a.id, newValue);
-        auto b = db::CompanyAPI::getOrderById(a.id);
-        CHECK(a.id == b.id);
-        CHECK(a.title == b.title);
-        CHECK(a.companyId == b.companyId);
-        CHECK(a.timeStart == b.timeStart);
-        CHECK(a.clientId == b.clientId);
-        CHECK(b.duration == newValue);
-        CHECK(a.employeeId == b.employeeId);
+        db::CompanyAPI::changeOrderDuration(id, newValue);
+        auto b = db::CompanyAPI::getOrderById(id);
+        CHECK(id == b.id);
+        CHECK("nogotochki" == b.title);
+        CHECK(company == b.companyId);
+        CHECK(b.timeStart == 1);
+        CHECK(newValue == b.duration);
+        CHECK(employee == b.employeeId);
+        CHECK(-1 == b.clientId);
     }
 
     SUBCASE("Employee fullName") {
         auto company = db::CompanyAPI::createCompany("+7-987-654-32-20",
                                                      "password", "Zavod");
-        auto a = db::CompanyAPI::createEmployee(company.id, "Vasya");
+        auto id = db::CompanyAPI::createEmployee(company, "Vasya");
 
-        db::CompanyAPI::changeEmployeeFullName(a.id, "Petya");
-        auto b = db::CompanyAPI::getEmployeeById(a.id);
-        CHECK(a.id == b.id);
+        db::CompanyAPI::changeEmployeeFullName(id, "Petya");
+        auto b = db::CompanyAPI::getEmployeeById(id);
+        CHECK(id == b.id);
         CHECK(b.fullName == "Petya");
-        CHECK(a.companyId == b.companyId);
+        CHECK(company == b.companyId);
     }
 }
 
 TEST_CASE("Booking and cancelling") {
     auto company =
         db::CompanyAPI::createCompany("+7-987-654-32-21", "password", "Zavod");
-    auto employee = db::CompanyAPI::createEmployee(company.id, "Petya");
+    auto employee = db::CompanyAPI::createEmployee(company, "Petya");
     auto client = db::ClientAPI::createClient("+7-987-654-32-22", "password",
                                               "Vasya", "vasya@mail.com");
     ;
-    auto a = db::CompanyAPI::createOrder(company.id, "nogotochki",
-                                         1, 2,
-                                         employee.id);
-    CHECK(isIn(db::CompanyAPI::listVacantOrdersOfCompany(company.id), a.id));
-    CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee.id), a.id));
-    CHECK(!isIn(db::CompanyAPI::listBookedOrdersOfCompany(company.id), a.id));
-    CHECK(!isIn(db::CompanyAPI::listBookedOrdersOfEmployee(employee.id), a.id));
-    CHECK(!isIn(db::ClientAPI::listOrdersOfClient(client.id), a.id));
-    CHECK(a.companyId == company.id);
-    CHECK(a.employeeId == employee.id);
+    auto id =
+        db::CompanyAPI::createOrder(company, "nogotochki", 1, 2, employee);
+    auto a = db::CompanyAPI::getOrderById(id);
+    CHECK(isIn(db::CompanyAPI::listVacantOrdersOfCompany(company), id));
+    CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee), id));
+    CHECK(!isIn(db::CompanyAPI::listBookedOrdersOfCompany(company), id));
+    CHECK(!isIn(db::CompanyAPI::listBookedOrdersOfEmployee(employee), id));
+    CHECK(!isIn(db::ClientAPI::listOrdersOfClient(client), id));
+    CHECK(a.companyId == company);
+    CHECK(a.employeeId == employee);
     CHECK(a.clientId == -1);
 
-    db::ClientAPI::bookOrder(a.id, client.id);
+    db::ClientAPI::bookOrder(a.id, client);
     auto b = db::ClientAPI::getOrderById(a.id);
-    CHECK(!isIn(db::CompanyAPI::listVacantOrdersOfCompany(company.id), a.id));
-    CHECK(!isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee.id), a.id));
-    CHECK(isIn(db::CompanyAPI::listBookedOrdersOfCompany(company.id), a.id));
-    CHECK(isIn(db::CompanyAPI::listBookedOrdersOfEmployee(employee.id), a.id));
-    CHECK(isIn(db::ClientAPI::listOrdersOfClient(client.id), a.id));
-    CHECK(b.companyId == company.id);
-    CHECK(b.employeeId == employee.id);
-    CHECK(b.clientId == client.id);
+    CHECK(!isIn(db::CompanyAPI::listVacantOrdersOfCompany(company), a.id));
+    CHECK(!isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee), a.id));
+    CHECK(isIn(db::CompanyAPI::listBookedOrdersOfCompany(company), a.id));
+    CHECK(isIn(db::CompanyAPI::listBookedOrdersOfEmployee(employee), a.id));
+    CHECK(isIn(db::ClientAPI::listOrdersOfClient(client), a.id));
+    CHECK(b.companyId == company);
+    CHECK(b.employeeId == employee);
+    CHECK(b.clientId == client);
 
     db::ClientAPI::cancelOrder(a.id);
     auto c = db::ClientAPI::getOrderById(a.id);
-    CHECK(isIn(db::CompanyAPI::listVacantOrdersOfCompany(company.id), a.id));
-    CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee.id), a.id));
-    CHECK(!isIn(db::CompanyAPI::listBookedOrdersOfCompany(company.id), a.id));
-    CHECK(!isIn(db::CompanyAPI::listBookedOrdersOfEmployee(employee.id), a.id));
-    CHECK(!isIn(db::ClientAPI::listOrdersOfClient(client.id), a.id));
-    CHECK(c.companyId == company.id);
-    CHECK(c.employeeId == employee.id);
+    CHECK(isIn(db::CompanyAPI::listVacantOrdersOfCompany(company), a.id));
+    CHECK(isIn(db::CompanyAPI::listVacantOrdersOfEmployee(employee), a.id));
+    CHECK(!isIn(db::CompanyAPI::listBookedOrdersOfCompany(company), a.id));
+    CHECK(!isIn(db::CompanyAPI::listBookedOrdersOfEmployee(employee), a.id));
+    CHECK(!isIn(db::ClientAPI::listOrdersOfClient(client), a.id));
+    CHECK(c.companyId == company);
+    CHECK(c.employeeId == employee);
     CHECK(c.clientId == -1);
 }

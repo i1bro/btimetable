@@ -6,21 +6,21 @@
 namespace db {
 class CompanyAPI {
 public:
-    static Company createCompany(const std::string &phoneNumber,
-                                 const std::string &password,
-                                 const std::string &name);
+    static long long createCompany(const std::string &phoneNumber,
+                                   const std::string &password,
+                                   const std::string &name);
 
     static long long authorizeCompany(const std::string &phoneNumber,
                                       const std::string &password);
 
-    static Order createOrder(long long companyId,
-                             const std::string &title,
-                             long long timeStart,
-                             long long duration,
-                             long long employeeId);
+    static long long createOrder(long long companyId,
+                                 const std::string &title,
+                                 long long timeStart,
+                                 long long duration,
+                                 long long employeeId);
 
-    static Employee createEmployee(long long companyId,
-                                   const std::string &fullName);
+    static long long createEmployee(long long companyId,
+                                    const std::string &fullName);
 
     static std::vector<long long> listVacantOrdersOfCompany(long long id);
 

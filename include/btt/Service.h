@@ -13,29 +13,37 @@ private:
 public:
     Service() = default;
 
-    static Company createCompany(const std::string &phoneNumber,
-                                 const std::string &password,
-                                 const std::string &name);
+    static long long createCompany(const std::string &phoneNumber,
+                                   const std::string &password,
+                                   const std::string &name);
 
-    static Order createOrder(long long companyId,
-                             const std::string &title,
-                             long long timeStart,
-                             long long duration,
-                             long long employeeId);
+    static long long createOrder(long long companyId,
+                                 const std::string &title,
+                                 long long timeStart,
+                                 long long duration,
+                                 long long employeeId);
 
-    static Employee createEmployee(long long companyId,
-                                   const std::string &fullName);
+    static long long createEmployee(long long companyId,
+                                    const std::string &fullName);
 
-    static Client createClient(const std::string &phoneNumber,
-                               const std::string &password,
-                               const std::string &fullName,
-                               const std::string &email);
+    static long long createClient(const std::string &phoneNumber,
+                                  const std::string &password,
+                                  const std::string &fullName,
+                                  const std::string &email);
 
     static long long authorizeClient(const std::string &phoneNumber,
                                      const std::string &password);
 
     static long long authorizeCompany(const std::string &phoneNumber,
                                       const std::string &password);
+
+    static std::vector<long long> listOrders(long long companyId,
+                                             long long employeeId,
+                                             Order::statusEnum status,
+                                             long long leastTimeStart = 0,
+                                             long long leastDuration = 0,
+                                             sortParam sortBy = byId,
+                                             bool reversed = true);
 
     static std::vector<long long> listVacantOrdersOfCompany(long long id);
 
@@ -60,6 +68,12 @@ public:
     static Company getCompanyById(long long id);
 
     static void deleteOrder(long long id);
+
+    static void bookOrder(long long orderId, long long clientId);
+
+    static void cancelOrder(long long id);
+
+    static void rateOrder(long long id, int rating);
 
     static std::vector<long long> listVacantOrdersOfEmployee(long long id);
 

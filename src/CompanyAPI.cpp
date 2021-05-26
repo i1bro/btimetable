@@ -4,23 +4,23 @@
 
 namespace db {
 
-Company CompanyAPI::createCompany(const std::string &phoneNumber,
-                                  const std::string &password,
-                                  const std::string &name) {
+long long CompanyAPI::createCompany(const std::string &phoneNumber,
+                                    const std::string &password,
+                                    const std::string &name) {
     return Service::createCompany(phoneNumber, password, name);
 }
 
-Order CompanyAPI::createOrder(long long companyId,
-                              const std::string &title,
-                              long long timeStart,
-                              long long duration,
-                              long long employeeId) {
+long long CompanyAPI::createOrder(long long companyId,
+                                  const std::string &title,
+                                  long long timeStart,
+                                  long long duration,
+                                  long long employeeId) {
     return Service::createOrder(companyId, title, timeStart, duration,
                                 employeeId);
 }
 
-Employee CompanyAPI::createEmployee(long long companyId,
-                                    const std::string &fullName) {
+long long CompanyAPI::createEmployee(long long companyId,
+                                     const std::string &fullName) {
     return Service::createEmployee(companyId, fullName);
 }
 

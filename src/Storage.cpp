@@ -2,49 +2,39 @@
 #include <iostream>
 
 namespace db {
-
 namespace {
-const std::vector<Column> stringColumns = {name,     fullName,  phoneNumber,
-                                           email,    title, isDeleted, password};
+const std::string &nameOfTable(Table t) {
+    static std::unordered_map<Table, const std::string> nameOfTable = {
+        {clients, "clients"},
+        {employees, "employees"},
+        {orders, "orders"},
+        {companies, "companies"},
+        {clientAccounts, "client_accounts"},
+        {companyAccounts, "company_accounts"}};
+    return nameOfTable[t];
+};
 
-const std::vector<Column> numericColumns = {id, timeStart, duration, clientId,  companyId,
-                                            employeeId, ratingSum, ratingCnt};
-
-std::unordered_map<Table, const std::string> nameOfTable = {
-    {clients, "clients"},
-    {employees, "employees"},
-    {orders, "orders"},
-    {companies, "companies"},
-    {clientAccounts, "client_accounts"},
-    {companyAccounts, "company_accounts"}};
-
-std::unordered_map<Table, const std::vector<Column>> columnsOfTable = {
-    {clients, {id, fullName, phoneNumber, email}},
-    {employees, {id, companyId, fullName, ratingSum, ratingCnt}},
-    {orders,
-     {id, companyId, title, duration, timeStart, clientId, employeeId,
-      isDeleted}},
-    {companies, {id, name}},
-    {clientAccounts, {phoneNumber, password, clientId}},
-    {companyAccounts, {phoneNumber, password, companyId}}};
-
-std::unordered_map<Column, const std::string> nameOfColumn = {
-    {name, "name"},
-    {fullName, "full_name"},
-    {phoneNumber, "phone_number"},
-    {email, "email"},
-    {title, "title"},
-    {timeStart, "time_start"},
-    {duration, "duration"},
-    {clientId, "client_id"},
-    {companyId, "company_id"},
-    {employeeId, "employee_id"},
-    {id, "id"},
-    {ratingSum, "rating_sum"},
-    {ratingCnt, "rating_cnt"},
-    {isDeleted, "is_deleted"},
-    {password, "password"},
-    {all, "*"}};
+const std::string &nameOfColumn(Column col) {
+    static std::unordered_map<Column, const std::string> nameOfColumn = {
+        {name, "name"},
+        {fullName, "full_name"},
+        {phoneNumber, "phone_number"},
+        {email, "email"},
+        {title, "title"},
+        {timeStart, "time_start"},
+        {duration, "duration"},
+        {clientId, "client_id"},
+        {companyId, "company_id"},
+        {employeeId, "employee_id"},
+        {id, "id"},
+        {rating, "rating"},
+        {ratingSum, "rating_sum"},
+        {ratingCnt, "rating_cnt"},
+        {status, "status"},
+        {password, "password"},
+        {all, "*"}};
+    return nameOfColumn[col];
+};
 
 bool isIn(Column col, const std::vector<Column> &cols) {
     for (auto c : cols) {
@@ -56,228 +46,217 @@ bool isIn(Column col, const std::vector<Column> &cols) {
 }
 }  // namespace
 
-std::string Operation::execute() const {
-    if (!canBeExecuted) {
-        throw std::runtime_error("TODO");  // TODO
+Update::Update(Table t) {
+    table = t;
+}
+
+std::string Update::build() {
+    if (values.empty()) {
+        throw buildingQueryError();
+    }
+    std::stringstream s;
+    s << "UPDATE " << nameOfTable(table) << " SET";
+    bool beg = true;
+    for (auto &val : values) {
+        if (!beg) {
+            s << ",";
+        }
+        beg = false;
+        s << " " << nameOfColumn(val.first) << " = " << val.second;
+    }
+    if (!conditions.empty()) {
+        s << " WHERE";
+        beg = true;
+        for (auto &val : conditions) {
+            if (!beg) {
+                s << " AND";
+            }
+            beg = false;
+            s << " " << nameOfColumn(val.first) << val.second;
+        }
     }
     return s.str();
 }
 
-std::string Operation::parseCol(Column col) {
-    if (col != all && !isIn(col, columnsOfTable[table])) {
-        throw std::invalid_argument("TODO");  // TODO
-    }
-    return nameOfColumn[col];
-}
-
-Update::Update(Table t) {
-    table = t;
-    s << "UPDATE " << nameOfTable[table] << " SET ";
-}
-
 Update &Update::set(Column col, const std::string &value) {
-    if (whereUsed) {
-        throw std::invalid_argument("TODO");  // TODO
-    }
-    if (setUsed) {
-        s << ", ";
-    } else {
-        setUsed = true;
-    }
-    if (isIn(col, stringColumns)) {
-        s << parseCol(col) << " = '" << value << "' ";
-    } else {
-        s << parseCol(col) << " = " << value << " ";
-    }
-    canBeExecuted = true;
+    values.emplace_back(col, "'" + value + "'");
     return *this;
 }
 
 Update &Update::set(Column col, long long value) {
-    if (!isIn(col, numericColumns)) {
-        throw std::invalid_argument("TODO");  // TODO
-    }
-    if (value == -1) {
-        return set(col, "NULL");
-    }
-    return set(col, std::to_string(value));
-}
-
-Update &Update::where(Column col, const std::string &value) {
-    if (whereUsed) {
-        s << "AND ";
-    } else {
-        whereUsed = true;
-        s << "WHERE ";
-    }
-    if (value == "NULL" || value == "NOT NULL") {
-        s << parseCol(col) << " IS " << value << " ";
-    } else if (isIn(col, stringColumns)) {
-        s << parseCol(col) << " = '" << value << "' ";
-    } else {
-        s << parseCol(col) << " = " << value << " ";
-    }
+    values.emplace_back(col, std::to_string(value));
     return *this;
 }
 
-Update &Update::where(Column col, long long value) {
-    if (!isIn(col, numericColumns)) {
-        throw std::invalid_argument("TODO");  // TODO
+Update &Update::setNull(Column col) {
+    values.emplace_back(col, "NULL");
+    return *this;
+}
+
+Update &Update::where(Column col, const std::string &value) {
+    conditions.emplace_back(col, " = '" + value + "'");
+    return *this;
+}
+
+Update &Update::where(Column col, long long value, const std::string &op) {
+    if (op != "=" && op != ">" && op != "<" && op != ">=" && op != "<=" &&
+        op != "!=") {
+        throw buildingQueryError();
     }
-    if (value == -1) {
-        return where(col, "NULL");
+    conditions.emplace_back(col, " " + op + " " + std::to_string(value));
+    return *this;
+}
+
+Update &Update::whereIsNull(Column col) {
+    conditions.emplace_back(col, " IS NULL");
+    return *this;
+}
+
+Update &Update::whereIsNotNull(Column col) {
+    conditions.emplace_back(col, " IS NOT NULL");
+    return *this;
+}
+
+std::string Insert::build() {
+    if (values.empty()) {
+        throw buildingQueryError();
     }
-    return where(col, std::to_string(value));
+    std::stringstream s;
+    s << "INSERT INTO " << nameOfTable(table) << "(";
+    bool beg = true;
+    for (auto &val : values) {
+        if (!beg) {
+            s << ",";
+        }
+        beg = false;
+        s << " " << nameOfColumn(val.first);
+    }
+    s << ") VALUES (";
+    beg = true;
+    for (auto &val : values) {
+        if (!beg) {
+            s << ",";
+        }
+        beg = false;
+        s << " " << val.second;
+    }
+    s << ")";
+    if (returnCol != all) {
+        s << " RETURNING " << nameOfColumn(returnCol);
+    }
+    return s.str();
 }
 
 Insert::Insert(Table t) {
     table = t;
-    s << "INSERT INTO ";
-    switch (table) {
-        case clients:
-            s << "clients(full_name, phone_number, email) ";
-            requiredCols = {fullName, phoneNumber, email};
-            break;
-        case employees:
-            s << "employees(company_id, full_name) ";
-            requiredCols = {companyId, fullName};
-            break;
-        case orders:
-            s << "orders(company_id, title, time_start, duration, "
-                 "employee_id) ";
-            requiredCols = {companyId, title, timeStart, duration, employeeId};
-            break;
-        case companies:
-            s << "companies(name) ";
-            requiredCols = {name};
-            break;
-        case clientAccounts:
-            s << "client_accounts(phone_number, password, client_id) ";
-            requiredCols = {phoneNumber, password, clientId};
-            break;
-        case companyAccounts:
-            s << "company_accounts(phone_number, password, company_id) ";
-            requiredCols = {phoneNumber, password, companyId};
-            break;
-    }
-    s << "VALUES (";
 }
 
 Insert &Insert::set(Column col, const std::string &value) {
-    if (requiredCols.find(col) == requiredCols.end()) {
-        throw std::invalid_argument("TODO");  // TODO
-    }
-    requiredCols.erase(col);
-    if (isIn(col, stringColumns)) {
-        currentValues[col] = "'" + value + "'";
-    } else {
-        currentValues[col] = value;
-    }
-    if (requiredCols.empty()) {
-        switch (table) {
-            case clients:
-                s << currentValues[fullName] << ", "
-                  << currentValues[phoneNumber] << ", " << currentValues[email];
-                break;
-            case employees:
-                s << currentValues[companyId] << ", "
-                  << currentValues[fullName];
-                break;
-            case orders:
-                s << currentValues[companyId] << ", " << currentValues[title]
-                  << ", " << currentValues[timeStart] << ", "
-                  << currentValues[duration] << ", "
-                  << currentValues[employeeId];
-                break;
-            case companies:
-                s << currentValues[name];
-                break;
-            case clientAccounts:
-                s << currentValues[phoneNumber] << ", "
-                  << currentValues[password] << ", " << currentValues[clientId];
-                break;
-            case companyAccounts:
-                s << currentValues[phoneNumber] << ", "
-                  << currentValues[password] << ", "
-                  << currentValues[companyId];
-                break;
-        }
-        s << ") ";
-        if (table != clientAccounts && table != companyAccounts) {
-            s << "RETURNING id";
-        }
-        canBeExecuted = true;
-    }
+    values.emplace_back(col, "'" + value + "'");
     return *this;
 }
 
 Insert &Insert::set(Column col, long long value) {
-    if (!isIn(col, numericColumns)) {
-        throw std::invalid_argument("TODO");  // TODO
+    values.emplace_back(col, std::to_string(value));
+    return *this;
+}
+
+Insert &Insert::setNull(Column col) {
+    values.emplace_back(col, "NULL");
+    return *this;
+}
+
+Insert &Insert::returning(Column col) {
+    returnCol = col;
+    return *this;
+}
+
+std::string Select::build() {
+    if (cols.empty()) {
+        throw buildingQueryError();
     }
-    if (value == -1) {
-        return set(col, "NULL");
+    std::stringstream s;
+    s << "SELECT ";
+    bool beg = true;
+    for (auto &val : cols) {
+        if (!beg) {
+            s << ",";
+        }
+        beg = false;
+        s << " " << nameOfColumn(val);
     }
-    return set(col, std::to_string(value));
+    s << " FROM " << nameOfTable(table);
+    if (!conditions.empty()) {
+        s << " WHERE";
+        beg = true;
+        for (auto &val : conditions) {
+            if (!beg) {
+                s << " AND";
+            }
+            beg = false;
+            s << " " << nameOfColumn(val.first) << val.second;
+        }
+    }
+    if (!orderStr.empty()) {
+        s << " ORDER BY";
+        beg = true;
+        for (auto &val : orderStr) {
+            if (!beg) {
+                s << ",";
+            }
+            beg = false;
+            s << " " << val;
+        }
+    }
+    return s.str();
 }
 
 Select::Select(Table t) {
     table = t;
-    s << "SELECT ";
 }
 
-Select &Select::columns(const std::vector<Column> &cols) {
-    if (columnsUsed || whereUsed || orderedUsed) {
-        throw std::invalid_argument("TODO");  // TODO
+Select &Select::columns(const std::vector<Column> &cols_) {
+    for (auto c : cols_) {
+        cols.push_back(c);
     }
-    columnsUsed = true;
-    bool first = true;
-    for (auto col : cols) {
-        if (!first) {
-            s << ", ";
-        } else {
-            first = false;
-        }
-        s << parseCol(col);
-    }
-    s << " FROM " << nameOfTable[table] << " ";
-    canBeExecuted = true;
     return *this;
 }
 
 Select &Select::where(Column col, const std::string &value) {
-    if (whereUsed) {
-        s << "AND ";
-    } else {
-        whereUsed = true;
-        s << "WHERE ";
+    conditions.emplace_back(col, " = '" + value + "'");
+    return *this;
+}
+
+Select &Select::where(Column col, long long value, const std::string &op) {
+    if (op != "=" && op != ">" && op != "<" && op != ">=" && op != "<=" &&
+        op != "!=") {
+        throw buildingQueryError();
     }
-    if (value == "NULL" || value == "NOT NULL") {
-        s << parseCol(col) << " IS " << value << " ";
-    } else if (isIn(col, stringColumns)) {
-        s << parseCol(col) << " = '" << value << "' ";
+    conditions.emplace_back(col, " " + op + " " + std::to_string(value));
+    return *this;
+}
+
+Select &Select::whereIsNull(Column col) {
+    conditions.emplace_back(col, " IS NULL");
+    return *this;
+}
+
+Select &Select::whereIsNotNull(Column col) {
+    conditions.emplace_back(col, " IS NOT NULL");
+    return *this;
+}
+
+Select &Select::orderedBy(Column col, bool reversed) {
+    if (!reversed) {
+        orderStr.push_back(nameOfColumn(col) + " ASC");
     } else {
-        s << parseCol(col) << " = " << value << " ";
+        orderStr.push_back(nameOfColumn(col) + " DESC");
     }
     return *this;
 }
 
-Select &Select::where(Column col, long long value) {
-    if (!isIn(col, numericColumns)) {
-        throw std::invalid_argument("TODO");  // TODO
-    }
-    if (value == -1) {
-        return where(col, "NULL");
-    }
-    return where(col, std::to_string(value));
-}
-
-Select &Select::orderedBy(Column col) {
-    if (orderedUsed) {
-        throw std::invalid_argument("TODO");  // TODO
-    }
-    orderedUsed = true;
-    s << "ORDERED BY " << parseCol(col);
+Select &Select::orderedBy(const std::string &condition) {
+    orderStr.push_back(condition);
     return *this;
 }
 
@@ -301,9 +280,14 @@ Result &Result::operator=(pqxx::result &&res_) {
 
 Employee Result::toEmployee() {
     const pqxx::row &cur = res[0];
-    Employee employee(cur["id"].as<long long>(),
-                      cur["company_id"].as<long long>(),
-                      cur["full_name"].c_str());
+    double rating = 0;
+    if (cur["rating_cnt"].as<long long>() != 0) {
+        rating =
+            cur["rating_sum"].as<double>() / cur["rating_cnt"].as<double>();
+    }
+    Employee employee(
+        cur["id"].as<long long>(), cur["company_id"].as<long long>(),
+        cur["full_name"].c_str(), rating, cur["rating_cnt"].as<long long>());
     return employee;
 }
 
@@ -321,13 +305,21 @@ Order Result::toOrder() {
         cur["title"].c_str(), cur["time_start"].as<long long>(),
         cur["duration"].as<long long>(),
         (cur["client_id"].is_null() ? -1 : cur["client_id"].as<long long>()),
-        cur["employee_id"].as<long long>());
+        cur["employee_id"].as<long long>(),
+        static_cast<Order::statusEnum>(cur["status"].as<int>()),
+        cur["rating"].as<int>());
     return order;
 }
 
 Company Result::toCompany() {
     const pqxx::row &cur = res[0];
-    Company company(cur["id"].as<long long>(), cur["name"].c_str());
+    double rating = 0;
+    if (cur["rating_cnt"].as<long long>() != 0) {
+        rating =
+            cur["rating_sum"].as<double>() / cur["rating_cnt"].as<double>();
+    }
+    Company company(cur["id"].as<long long>(), cur["name"].c_str(), rating,
+                    cur["rating_cnt"].as<long long>());
     return company;
 }
 
@@ -343,15 +335,16 @@ std::vector<long long> Result::toVecLL() {
     return ans;
 }
 
-Result Storage::execute(const Operation &op) {
+Result Storage::execute(Operation &op) {
     try {
         pqxx::work W{C};
-        Result res(W.exec(op.execute()));
+        auto a = op.build();
+        Result res(W.exec(op.build()));
         W.commit();
         return res;
     } catch (const std::exception &e) {
         std::cerr << e.what();
-        throw std::invalid_argument("TODO");  // TODO
+        throw e;
     }
 }
 
