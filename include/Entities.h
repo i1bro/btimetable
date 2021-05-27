@@ -22,13 +22,10 @@ struct bttFatalError : bttError {
 };
 
 enum sortParam {
-    byId,
+    byRating,
+    byName,
     byTimeStart,
-    byDuration,
-    byCompanyRating,
-    byEmployeeRating,
-    byCompanyName,
-    byEmployeeName
+    byDuration
 };
 
 class Employee {
@@ -124,6 +121,17 @@ public:
           rating(rating_),
           ratingCnt(ratingCnt_) {
     }
+};
+
+struct orderSearchParams {
+    long long companyId = -1;
+    long long employeeId = -1;
+    sortParam sorted = byTimeStart;
+    std::string title;
+    long long minTimeStart = 0;
+    long long maxTimeStart = -1;
+    long long minDuration = 0;
+    long long maxDuration = -1;
 };
 
 }  // namespace db

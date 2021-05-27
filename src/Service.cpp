@@ -184,14 +184,34 @@ std::vector<long long> Service::listOrdersOfClient(long long id) {
         .toVecLL();
 }
 
-std::vector<long long> Service::listCompanies() {
-    return storage.execute(Select(tblCompanies).columns({clmId})).toVecLL();
+std::vector<long long> Service::listCompanies(sortParam sorted) {
+    auto query = Select(tblCompanies).columns({clmId});
+    switch (sorted) {
+        case byName:
+            query.orderedBy(clmFullName);
+            break;
+        case byRating:
+            query.orderedBy("rating_sum / GREATEST (rating_cnt, 1) DESC");
+            break;
+        default:
+            throw std::exception();  // TODO
+    }
+    return storage.execute(query).toVecLL();
 }
 
-std::vector<long long> Service::listEmployeesOfCompany(long long id) {
-    return storage
-        .execute(Select(tblEmployees).columns({clmId}).where(clmCompanyId, id))
-        .toVecLL();
+std::vector<long long> Service::listEmployeesOfCompany(long long id, sortParam sorted) {
+    auto query = Select(tblEmployees).columns({clmId}).where(clmCompanyId, id);
+    switch (sorted) {
+        case byName:
+            query.orderedBy(clmFullName);
+            break;
+        case byRating:
+            query.orderedBy("rating_sum / GREATEST (rating_cnt, 1) DESC");
+            break;
+        default:
+            throw std::exception();  // TODO
+    }
+    return storage.execute(query).toVecLL();
 }
 
 void Service::deleteEmployee(long long id) {
@@ -293,33 +313,36 @@ long long Service::authorizeCompany(const std::string &phoneNumber,
     }
 }
 
-std::vector<long long> Service::listOrders(long long companyId,
-                                           long long employeeId,
-                                           Order::statusEnum status,
-                                           long long leastTimeStart,
-                                           long long leastDuration,
-                                           sortParam sortBy,
-                                           bool reversed) {
+std::vector<long long> Service::listOrders(const orderSearchParams &params) {
     auto query = Select(tblOrders)
                      .columns({clmId})
-                     .where(clmStatus, status)
-                     .where(clmDuration, leastDuration, ">")
-                     .where(clmTimeStart, leastTimeStart, ">");
-    if (companyId != -1) {
-        query.where(clmCompanyId, companyId);
+                     .where(clmStatus, Order::vacant)
+                     .where(clmDuration, params.minDuration, ">=")
+                     .where(clmTimeStart, params.minTimeStart, ">=");
+    if (params.maxDuration != -1) {
+        query.where(clmCompanyId, params.maxDuration, "<=");
     }
-    if (employeeId != -1) {
-        query.where(clmEmployeeId, employeeId);
+    if (params.maxTimeStart != -1) {
+        query.where(clmEmployeeId, params.maxTimeStart, "<=");
     }
-    switch (sortBy) {
-        case byId:
-            query.orderedBy(clmId, reversed);
-            break;
+    if (params.companyId != -1) {
+        query.where(clmCompanyId, params.companyId);
+    }
+    if (params.employeeId != -1) {
+        query.where(clmEmployeeId, params.employeeId);
+    }
+    if (!params.title.empty()) {
+        query.where(clmTitle, params.title);
+    }
+    switch (params.sorted) {
         case byTimeStart:
-            query.orderedBy(clmTimeStart, reversed);
+            query.orderedBy(clmTimeStart);
             break;
         case byDuration:
-            query.orderedBy(clmDuration, reversed);
+            query.orderedBy(clmDuration);
+            break;
+        case byName:
+            query.orderedBy(clmTitle);
             break;
         default:
             throw std::exception();  // TODO

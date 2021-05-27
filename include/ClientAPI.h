@@ -14,20 +14,14 @@ public:
     static std::string authorizeClient(const std::string &phoneNumber,
                                        const std::string &password);
 
-    static std::vector<long long> listCompanies();
+    static std::vector<long long> listCompanies(sortParam sorted = byRating);
 
-    static std::vector<long long> listOrders(long long companyId,
-                                             long long employeeId,
-                                             Order::statusEnum status,
-                                             long long leastTimeStart = 0,
-                                             long long leastDuration = 0,
-                                             sortParam sortBy = byId,
-                                             bool reversed = true);
+    static std::vector<long long> listOrders(const orderSearchParams &params);
 
     static std::vector<long long> listVacantOrdersOfCompany(
         long long companyId);
 
-    static std::vector<long long> listEmployeesOfCompany(long long companyId);
+    static std::vector<long long> listEmployeesOfCompany(long long companyId, sortParam sorted = byRating);
 
     static void bookOrder(const std::string &token, long long orderId);
 

@@ -37,13 +37,7 @@ public:
     static long long authorizeCompany(const std::string &phoneNumber,
                                       const std::string &password);
 
-    static std::vector<long long> listOrders(long long companyId,
-                                             long long employeeId,
-                                             Order::statusEnum status,
-                                             long long leastTimeStart = 0,
-                                             long long leastDuration = 0,
-                                             sortParam sortBy = byId,
-                                             bool reversed = true);
+    static std::vector<long long> listOrders(const orderSearchParams &params);
 
     static std::vector<long long> listVacantOrdersOfCompany(long long id);
 
@@ -85,9 +79,9 @@ public:
 
     static std::vector<long long> listOrdersOfClient(long long id);
 
-    static std::vector<long long> listCompanies();
+    static std::vector<long long> listCompanies(sortParam sorted = byRating);
 
-    static std::vector<long long> listEmployeesOfCompany(long long id);
+    static std::vector<long long> listEmployeesOfCompany(long long id, sortParam sorted = byRating);
 
     static std::string createToken(long long id, const std::string &role);
 

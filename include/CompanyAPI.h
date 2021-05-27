@@ -71,7 +71,7 @@ public:
         long long employeeId);
 
     static std::vector<long long> listEmployeesOfCompany(
-        const std::string &token);
+        const std::string &token, sortParam sorted = byRating);
 };
 }  // namespace db
 

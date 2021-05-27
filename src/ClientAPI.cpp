@@ -12,8 +12,8 @@ std::string ClientAPI::createClient(const std::string &phoneNumber,
         "client");
 }
 
-std::vector<long long> ClientAPI::listCompanies() {
-    return Service::listCompanies();
+std::vector<long long> ClientAPI::listCompanies(sortParam sorted) {
+    return Service::listCompanies(sorted);
 }
 
 std::vector<long long> ClientAPI::listVacantOrdersOfCompany(
@@ -21,8 +21,8 @@ std::vector<long long> ClientAPI::listVacantOrdersOfCompany(
     return Service::listVacantOrdersOfCompany(companyId);
 }
 
-std::vector<long long> ClientAPI::listEmployeesOfCompany(long long companyId) {
-    return Service::listEmployeesOfCompany(companyId);
+std::vector<long long> ClientAPI::listEmployeesOfCompany(long long companyId, sortParam sorted) {
+    return Service::listEmployeesOfCompany(companyId, sorted);
 }
 
 void ClientAPI::bookOrder(const std::string &token, long long orderId) {
@@ -131,15 +131,8 @@ std::string ClientAPI::authorizeClient(const std::string &phoneNumber,
                                 "client");
 }
 
-std::vector<long long> ClientAPI::listOrders(long long int companyId,
-                                             long long int employeeId,
-                                             Order::statusEnum status,
-                                             long long int leastTimeStart,
-                                             long long int leastDuration,
-                                             sortParam sortBy,
-                                             bool reversed) {
-    return Service::listOrders(companyId, employeeId, status, leastTimeStart,
-                               leastDuration, sortBy, reversed);
+std::vector<long long> ClientAPI::listOrders(const orderSearchParams &params) {
+    return Service::listOrders(params);
 }
 
 }  // namespace db

@@ -219,12 +219,12 @@ std::vector<long long> CompanyAPI::listAllOrdersOfEmployee(
 }
 
 std::vector<long long> CompanyAPI::listEmployeesOfCompany(
-    const std::string &token) {
+    const std::string &token, sortParam sorted) {
     auto parsed = Service::verifyToken(token);
     if (parsed.second != "company") {
         throw std::exception();  // TODO
     }
-    return Service::listEmployeesOfCompany(parsed.first);
+    return Service::listEmployeesOfCompany(parsed.first, sorted);
 }
 
 std::string CompanyAPI::authorizeCompany(const std::string &phoneNumber,
