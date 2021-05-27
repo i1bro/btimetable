@@ -3,82 +3,132 @@
 
 namespace db {
 
-long long ClientAPI::createClient(const std::string &phoneNumber,
-                                  const std::string &password,
-                                  const std::string &fullName,
-                                  const std::string &email) {
-    return Service::createClient(phoneNumber, password, fullName, email);
+std::string ClientAPI::createClient(const std::string &phoneNumber,
+                                    const std::string &password,
+                                    const std::string &fullName,
+                                    const std::string &email) {
+    return Service::createToken(
+        Service::createClient(phoneNumber, password, fullName, email),
+        "client");
 }
 
 std::vector<long long> ClientAPI::listCompanies() {
     return Service::listCompanies();
 }
 
-std::vector<long long> ClientAPI::listVacantOrdersOfCompany(long long id) {
-    return Service::listVacantOrdersOfCompany(id);
+std::vector<long long> ClientAPI::listVacantOrdersOfCompany(
+    long long companyId) {
+    return Service::listVacantOrdersOfCompany(companyId);
 }
 
-std::vector<long long> ClientAPI::listEmployeesOfCompany(long long id) {
-    return Service::listEmployeesOfCompany(id);
+std::vector<long long> ClientAPI::listEmployeesOfCompany(long long companyId) {
+    return Service::listEmployeesOfCompany(companyId);
 }
 
-void ClientAPI::bookOrder(long long orderId, long long clientId) {
-    Service::bookOrder(orderId, clientId);
+void ClientAPI::bookOrder(const std::string &token, long long orderId) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "client") {
+        throw std::exception();  // TODO
+    }
+    auto order = Service::getOrderById(orderId);
+    if (order.status != Order::vacant) {
+        throw std::exception();  // TODO
+    }
+    Service::bookOrder(orderId, parsed.first);
 }
 
-void ClientAPI::cancelOrder(long long orderId) {
+void ClientAPI::cancelOrder(const std::string &token, long long orderId) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "client") {
+        throw std::exception();  // TODO
+    }
+    auto order = Service::getOrderById(orderId);
+    if (order.status != Order::booked || order.clientId != parsed.first) {
+        throw std::exception();  // TODO
+    }
     Service::cancelOrder(orderId);
 }
 
-void ClientAPI::rateOrder(long long id, int rating) {
-    Service::rateOrder(id, rating);
+void ClientAPI::rateOrder(const std::string &token,
+                          long long orderId,
+                          int rating) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "client") {
+        throw std::exception();  // TODO
+    }
+    auto order = Service::getOrderById(orderId);
+    if (order.status != Order::booked || order.clientId != parsed.first) {
+        throw std::exception();  // TODO
+    }
+    Service::rateOrder(orderId, rating);
 }
 
-Client ClientAPI::getClientById(long long id) {
-    return Service::getClientById(id);
+Client ClientAPI::getClient(const std::string &token) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "client") {
+        throw std::exception();  // TODO
+    }
+    return Service::getClientById(parsed.first);
 }
 
-Order ClientAPI::getOrderById(long long id) {
-    return Service::getOrderById(id);
+Order ClientAPI::getOrderById(const std::string &token, long long orderId) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "client") {
+        throw std::exception();  // TODO
+    }
+    auto order = Service::getOrderById(orderId);
+    if (order.status != Order::vacant && order.clientId != parsed.first) {
+        throw std::exception();  // TODO
+    }
+    return Service::getOrderById(orderId);
 }
 
-Employee ClientAPI::getEmployeeById(long long id) {
-    return Service::getEmployeeById(id);
+Employee ClientAPI::getEmployeeById(long long employeeId) {
+    return Service::getEmployeeById(employeeId);
 }
 
-Company ClientAPI::getCompanyById(long long id) {
-    return Service::getCompanyById(id);
+Company ClientAPI::getCompanyById(long long companyId) {
+    return Service::getCompanyById(companyId);
 }
 
-void ClientAPI::changeClientFullName(long long id, std::string fullName) {
-    auto client = Service::getClientById(id);
+void ClientAPI::changeClientFullName(const std::string &token,
+                                     std::string fullName) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "client") {
+        throw std::exception();  // TODO
+    }
+    auto client = Service::getClientById(parsed.first);
     client.fullName = std::move(fullName);
     Service::saveClient(client);
 }
 
-void ClientAPI::changeClientPhoneNumber(long long id, std::string phoneNumber) {
-    auto client = Service::getClientById(id);
-    client.phoneNumber = std::move(phoneNumber);
-    Service::saveClient(client);
-}
-
-void ClientAPI::changeClientEmail(long long id, std::string email) {
-    auto client = Service::getClientById(id);
+void ClientAPI::changeClientEmail(const std::string &token, std::string email) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "client") {
+        throw std::exception();  // TODO
+    }
+    auto client = Service::getClientById(parsed.first);
     client.email = std::move(email);
     Service::saveClient(client);
 }
 
-std::vector<long long> ClientAPI::listOrdersOfClient(long long id) {
-    return Service::listOrdersOfClient(id);
+std::vector<long long> ClientAPI::listOrdersOfClient(const std::string &token) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "client") {
+        throw std::exception();  // TODO
+    }
+    return Service::listOrdersOfClient(parsed.first);
 }
 
-std::vector<long long> ClientAPI::listVacantOrdersOfEmployee(long long id) {
-    return Service::listVacantOrdersOfEmployee(id);
+std::vector<long long> ClientAPI::listVacantOrdersOfEmployee(
+    long long employeeId) {
+    return Service::listVacantOrdersOfEmployee(employeeId);
 }
 
-long long ClientAPI::authorizeClient(const std::string &phoneNumber,
-                                     const std::string &password) {
-    return Service::authorizeClient(phoneNumber, password);
+std::string ClientAPI::authorizeClient(const std::string &phoneNumber,
+                                       const std::string &password) {
+    return Service::createToken(Service::authorizeClient(phoneNumber, password),
+                                "client");
 }
 
 std::vector<long long> ClientAPI::listOrders(long long int companyId,

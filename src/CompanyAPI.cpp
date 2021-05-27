@@ -4,97 +4,222 @@
 
 namespace db {
 
-long long CompanyAPI::createCompany(const std::string &phoneNumber,
-                                    const std::string &password,
-                                    const std::string &name) {
-    return Service::createCompany(phoneNumber, password, name);
+std::string CompanyAPI::createCompany(const std::string &phoneNumber,
+                                      const std::string &password,
+                                      const std::string &name) {
+    return Service::createToken(
+        Service::createCompany(phoneNumber, password, name), "company");
 }
 
-long long CompanyAPI::createOrder(long long companyId,
+long long CompanyAPI::createOrder(const std::string &token,
                                   const std::string &title,
                                   long long timeStart,
                                   long long duration,
                                   long long employeeId) {
-    return Service::createOrder(companyId, title, timeStart, duration,
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    return Service::createOrder(parsed.first, title, timeStart, duration,
                                 employeeId);
 }
 
-long long CompanyAPI::createEmployee(long long companyId,
+long long CompanyAPI::createEmployee(const std::string &token,
                                      const std::string &fullName) {
-    return Service::createEmployee(companyId, fullName);
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    return Service::createEmployee(parsed.first, fullName);
 }
 
-std::vector<long long> CompanyAPI::listVacantOrdersOfCompany(long long id) {
-    return Service::listVacantOrdersOfCompany(id);
+std::vector<long long> CompanyAPI::listVacantOrdersOfCompany(
+    const std::string &token) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    return Service::listVacantOrdersOfCompany(parsed.first);
 }
 
-std::vector<long long> CompanyAPI::listBookedOrdersOfCompany(long long id) {
-    return Service::listBookedOrdersOfCompany(id);
+std::vector<long long> CompanyAPI::listBookedOrdersOfCompany(
+    const std::string &token) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    return Service::listBookedOrdersOfCompany(parsed.first);
 }
 
-std::vector<long long> CompanyAPI::listAllOrdersOfCompany(long long id) {
-    return Service::listAllOrdersOfCompany(id);
+std::vector<long long> CompanyAPI::listAllOrdersOfCompany(
+    const std::string &token) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    return Service::listAllOrdersOfCompany(parsed.first);
 }
 
-Order CompanyAPI::getOrderById(long long id) {
-    return Service::getOrderById(id);
+Order CompanyAPI::getOrderById(const std::string &token, long long orderId) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    auto order = Service::getOrderById(orderId);
+    if (order.companyId != parsed.first) {
+        throw std::exception();  // TODO
+    }
+    return std::move(order);
 }
 
-Employee CompanyAPI::getEmployeeById(long long id) {
-    return Service::getEmployeeById(id);
+Employee CompanyAPI::getEmployeeById(const std::string &token,
+                                     long long employeeId) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    auto employee = Service::getEmployeeById(employeeId);
+    if (employee.companyId != parsed.first) {
+        throw std::exception();  // TODO
+    }
+    return std::move(employee);
 }
 
-Company CompanyAPI::getCompanyById(long long id) {
-    return Service::getCompanyById(id);
+Company CompanyAPI::getCompany(const std::string &token) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    return Service::getCompanyById(parsed.first);
 }
 
-void CompanyAPI::changeOrderTitle(long long id, std::string title) {
-    auto order = Service::getOrderById(id);
+void CompanyAPI::changeOrderTitle(const std::string &token,
+                                  long long orderId,
+                                  std::string title) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    auto order = Service::getOrderById(orderId);
+    if (order.companyId != parsed.first) {
+        throw std::exception();  // TODO
+    }
     order.title = std::move(title);
     Service::saveOrder(order);
 }
 
-void CompanyAPI::changeOrderTimeStart(long long id, long long timeStart) {
-    auto order = Service::getOrderById(id);
+void CompanyAPI::changeOrderTimeStart(const std::string &token,
+                                      long long orderId,
+                                      long long timeStart) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    auto order = Service::getOrderById(orderId);
+    if (order.companyId != parsed.first) {
+        throw std::exception();  // TODO
+    }
     order.timeStart = timeStart;
     Service::saveOrder(order);
 }
 
-void CompanyAPI::changeOrderDuration(long long id, long long duration) {
-    auto order = Service::getOrderById(id);
+void CompanyAPI::changeOrderDuration(const std::string &token,
+                                     long long orderId,
+                                     long long duration) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    auto order = Service::getOrderById(orderId);
+    if (order.companyId != parsed.first) {
+        throw std::exception();  // TODO
+    }
     order.duration = duration;
     Service::saveOrder(order);
 }
 
-void CompanyAPI::changeEmployeeFullName(long long id, std::string fullName) {
-    auto employee = Service::getEmployeeById(id);
+void CompanyAPI::changeEmployeeFullName(const std::string &token,
+                                        long long employeeId,
+                                        std::string fullName) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    auto employee = Service::getEmployeeById(employeeId);
+    if (employee.companyId != parsed.first) {
+        throw std::exception();  // TODO
+    }
     employee.fullName = std::move(fullName);
     Service::saveEmployee(employee);
 }
 
-void CompanyAPI::deleteOrder(long long id) {
+void CompanyAPI::deleteOrder(const std::string &token, long long orderId) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    auto order = Service::getOrderById(orderId);
+    if (order.companyId != parsed.first) {
+        throw std::exception();  // TODO
+    }
     Service::deleteOrder(id);
 }
 
-std::vector<long long> CompanyAPI::listVacantOrdersOfEmployee(long long id) {
-    return Service::listVacantOrdersOfEmployee(id);
+std::vector<long long> CompanyAPI::listVacantOrdersOfEmployee(
+    const std::string &token,
+    long long employeeId) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    auto employee = Service::getEmployeeById(employeeId);
+    if (employee.companyId != parsed.first) {
+        throw std::exception();  // TODO
+    }
+    return Service::listVacantOrdersOfEmployee(employeeId);
 }
 
-std::vector<long long> CompanyAPI::listBookedOrdersOfEmployee(long long id) {
-    return Service::listBookedOrdersOfEmployee(id);
+std::vector<long long> CompanyAPI::listBookedOrdersOfEmployee(
+    const std::string &token,
+    long long employeeId) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    auto employee = Service::getEmployeeById(employeeId);
+    if (employee.companyId != parsed.first) {
+        throw std::exception();  // TODO
+    }
+    return Service::listBookedOrdersOfEmployee(employeeId);
 }
 
-std::vector<long long> CompanyAPI::listAllOrdersOfEmployee(long long id) {
-    return Service::listAllOrdersOfEmployee(id);
+std::vector<long long> CompanyAPI::listAllOrdersOfEmployee(
+    const std::string &token,
+    long long employeeId) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    auto employee = Service::getEmployeeById(employeeId);
+    if (employee.companyId != parsed.first) {
+        throw std::exception();  // TODO
+    }
+    return Service::listAllOrdersOfEmployee(employeeId);
 }
 
-std::vector<long long> CompanyAPI::listEmployeesOfCompany(long long id) {
-    return Service::listEmployeesOfCompany(id);
+std::vector<long long> CompanyAPI::listEmployeesOfCompany(
+    const std::string &token) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    return Service::listEmployeesOfCompany(parsed.first);
 }
 
-long long CompanyAPI::authorizeCompany(const std::string &phoneNumber,
-                                       const std::string &password) {
-    return Service::authorizeCompany(phoneNumber, password);
+std::string CompanyAPI::authorizeCompany(const std::string &phoneNumber,
+                                         const std::string &password) {
+    return Service::createToken(
+        Service::authorizeCompany(phoneNumber, password), "company");
 }
 
 }  // namespace db

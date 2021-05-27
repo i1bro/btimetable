@@ -10,7 +10,8 @@ IF (WIN32)
     set(PQXX_LIB pqxx)
     set(PQ_LIB PostgreSQL::PostgreSQL)
 ELSE()
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpqxx -lpq")
+    find_package(OpenSSL 1.0.2 REQUIRED)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpqxx -lpq -lcrypto -lssl")
     set(PQXX /usr/local/include/pqxx)
     find_library(PQXX_LIB pqxx)
     find_library(PQ_LIB pq)
@@ -18,7 +19,7 @@ ENDIF()
 
 add_executable(init-db initDB.cpp)
 
-target_link_libraries(init-db ${PQXX_LIB} ${PQ_LIB})
+target_link_libraries(init-db ${PQXX_LIB} ${PQ_LIB} OpenSSL::SSL OpenSSL::Crypto)
 IF (WIN32)
     target_link_libraries(init-db ws2_32.lib)
 ENDIF()
@@ -32,7 +33,7 @@ add_executable(data-base-test
         src/Storage.cpp
         src/Service.cpp)
 
-target_link_libraries(data-base-test ${PQXX_LIB} ${PQ_LIB})
+target_link_libraries(data-base-test ${PQXX_LIB} ${PQ_LIB} OpenSSL::SSL OpenSSL::Crypto)
 IF (WIN32)
     target_link_libraries(init-db ws2_32.lib)
 ENDIF()
@@ -44,7 +45,7 @@ add_library(btt STATIC
         src/Service.cpp
         src/Storage.cpp)
 
-target_link_libraries(btt ${PQXX_LIB} ${PQ_LIB})
+target_link_libraries(btt ${PQXX_LIB} ${PQ_LIB} OpenSSL::SSL OpenSSL::Crypto)
 IF (WIN32)
     target_link_libraries(init-db ws2_32.lib)
 ENDIF()

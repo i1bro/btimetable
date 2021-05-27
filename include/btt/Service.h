@@ -86,6 +86,11 @@ public:
     static std::vector<long long> listCompanies();
 
     static std::vector<long long> listEmployeesOfCompany(long long id);
+
+    static std::string createToken(long long id, const std::string &role);
+
+    static std::pair<long long, std::string> verifyToken(
+        const std::string &token);
 };
 
 }  // namespace db

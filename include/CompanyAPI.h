@@ -6,51 +6,70 @@
 namespace db {
 class CompanyAPI {
 public:
-    static long long createCompany(const std::string &phoneNumber,
-                                   const std::string &password,
-                                   const std::string &name);
+    static std::string createCompany(const std::string &phoneNumber,
+                                     const std::string &password,
+                                     const std::string &name);
 
-    static long long authorizeCompany(const std::string &phoneNumber,
-                                      const std::string &password);
+    static std::string authorizeCompany(const std::string &phoneNumber,
+                                        const std::string &password);
 
-    static long long createOrder(long long companyId,
+    static long long createOrder(const std::string &token,
                                  const std::string &title,
                                  long long timeStart,
                                  long long duration,
                                  long long employeeId);
 
-    static long long createEmployee(long long companyId,
+    static long long createEmployee(const std::string &token,
                                     const std::string &fullName);
 
-    static std::vector<long long> listVacantOrdersOfCompany(long long id);
+    static std::vector<long long> listVacantOrdersOfCompany(
+        const std::string &token);
 
-    static std::vector<long long> listBookedOrdersOfCompany(long long id);
+    static std::vector<long long> listBookedOrdersOfCompany(
+        const std::string &token);
 
-    static std::vector<long long> listAllOrdersOfCompany(long long id);
+    static std::vector<long long> listAllOrdersOfCompany(
+        const std::string &token);
 
-    static Order getOrderById(long long id);
+    static Order getOrderById(const std::string &token, long long orderId);
 
-    static Employee getEmployeeById(long long id);
+    static Employee getEmployeeById(const std::string &token,
+                                    long long employeeId);
 
-    static Company getCompanyById(long long id);
+    static Company getCompany(const std::string &token);
 
-    static void changeOrderTitle(long long id, std::string title);
+    static void changeOrderTitle(const std::string &token,
+                                 long long orderId,
+                                 std::string title);
 
-    static void changeOrderTimeStart(long long id, long long timeStart);
+    static void changeOrderTimeStart(const std::string &token,
+                                     long long orderId,
+                                     long long timeStart);
 
-    static void changeOrderDuration(long long id, long long duration);
+    static void changeOrderDuration(const std::string &token,
+                                    long long orderId,
+                                    long long duration);
 
-    static void changeEmployeeFullName(long long id, std::string fullName);
+    static void changeEmployeeFullName(const std::string &token,
+                                       long long employeeId,
+                                       std::string fullName);
 
-    static void deleteOrder(long long id);
+    static void deleteOrder(const std::string &token, long long orderId);
 
-    static std::vector<long long> listVacantOrdersOfEmployee(long long id);
+    static std::vector<long long> listVacantOrdersOfEmployee(
+        const std::string &token,
+        long long employeeId);
 
-    static std::vector<long long> listBookedOrdersOfEmployee(long long id);
+    static std::vector<long long> listBookedOrdersOfEmployee(
+        const std::string &token,
+        long long employeeId);
 
-    static std::vector<long long> listAllOrdersOfEmployee(long long id);
+    static std::vector<long long> listAllOrdersOfEmployee(
+        const std::string &token,
+        long long employeeId);
 
-    static std::vector<long long> listEmployeesOfCompany(long long id);
+    static std::vector<long long> listEmployeesOfCompany(
+        const std::string &token);
 };
 }  // namespace db
 

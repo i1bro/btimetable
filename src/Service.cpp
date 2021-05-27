@@ -1,5 +1,6 @@
-
 #include "btt/Service.h"
+#include <jwt-cpp/jwt.h>
+#include <iostream>
 
 namespace db {
 
@@ -270,7 +271,7 @@ long long Service::authorizeClient(const std::string &phoneNumber,
     try {
         return res.toLL();
     } catch (...) {
-        return -1;
+        throw std::exception();  // TODO
     }
 }
 
@@ -283,7 +284,7 @@ long long Service::authorizeCompany(const std::string &phoneNumber,
     try {
         return res.toLL();
     } catch (...) {
-        return -1;
+        throw std::exception();  // TODO
     }
 }
 
@@ -320,4 +321,63 @@ std::vector<long long> Service::listOrders(long long companyId,
     }
     return storage.execute(query).toVecLL();
 }
+
+namespace {
+const std::string &rsaPrivKey() {
+    static const std::string s = R"(-----BEGIN RSA PRIVATE KEY-----
+MIICXQIBAAKBgQDJ1qk4Ksd6BjIntQKzCUP+1fVj2TkoglyPY3I6nWfqn+oUnk1e
+m2BDtdl1og8TlwtfQJFUePG48WHdVylBw8MowDWKp4e+fyciO1y4RxJRYsTfcOhR
+GYDTLjm/Kpa0bjMMOXl6AJijD8bvooAQbSlcxbmBZecXTmDuafIZ/KGGtwIDAQAB
+AoGAXxjStfIB9k5BB1BTq0MsVD8+1QKd2aZCMhTq1w8ezP73bSuAzJhsbLqbcL8g
+V1yNMR3c2234hejE8WKFv8SaiBwvD7iSgG4oP9eBdfzeF38PvhR96/G02sKy67OS
+BTrypvYh0g3TF8Ylucvs9Jx0Klsoz1rlzHS1WZBIxnyC23ECQQDwVgPxoZeZNPVy
+/I40Id++M+8IWHlNpbE1u7mJpae8Gr89EA4NC7POzMc+yAWB4GINDKgNPnpmmxoC
+u2vVnja1AkEA1v5RkfteKJS45b8/B7aFqeDm0ozST5rkfZf8MJakKJph57p0EAcg
+SpC72cWrCKktiEfyb7a6oa9Tld7s2j8fOwJBALS3+T84w0XxDJ/qSQPqdNQROSyN
+WqmIbjh5cIqQhhBsDGFeMTKeGhbm5OvQfFOs5g3p9nP/Bwsgle54AB4hWgECQQCu
+6mrjImgRDC8CfP6C//TvqZMiaoARVCviIu2DeoxEnJZbOk+DWsji4a50F2Z3vWzW
+G/MbAMgHE+YlYSHCzuhRAkBMYUBIZuWgE5LgVkuEPvkvA92rIiFQEfrAdMQ/y7K/
+vbJRFIhMT44Aa/HL6NYo2GfaV1dWw6JTphZonwbiQ9bF
+-----END RSA PRIVATE KEY-----)";
+    return s;
+}
+const std::string &rsaPubKey() {
+    static const std::string s = R"(-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDJ1qk4Ksd6BjIntQKzCUP+1fVj
+2TkoglyPY3I6nWfqn+oUnk1em2BDtdl1og8TlwtfQJFUePG48WHdVylBw8MowDWK
+p4e+fyciO1y4RxJRYsTfcOhRGYDTLjm/Kpa0bjMMOXl6AJijD8bvooAQbSlcxbmB
+ZecXTmDuafIZ/KGGtwIDAQAB
+-----END PUBLIC KEY-----)";
+    return s;
+}
+}  // namespace
+
+std::string Service::createToken(long long id, const std::string &role) {
+    auto token =
+        jwt::create()
+            .set_issuer("server")
+            .set_type("JWT")
+            .set_payload_claim("id",
+                               jwt::claim(std::string{std::to_string(id)}))
+            .set_payload_claim("role", jwt::claim(std::string{role}))
+            .sign(jwt::algorithm::rs256(rsaPubKey(), rsaPrivKey(), "", ""));
+
+    return token;
+}
+
+std::pair<long long, std::string> Service::verifyToken(
+    const std::string &token) {
+    auto verify = jwt::verify()
+                      .allow_algorithm(jwt::algorithm::rs256(
+                          rsaPubKey(), rsaPrivKey(), "", ""))
+                      .with_issuer("server");
+
+    auto decoded = jwt::decode(token);
+
+    verify.verify(decoded);
+
+    return {std::stoll(decoded.get_payload_claims()["id"].to_json().to_str()),
+            decoded.get_payload_claims()["role"].to_json().to_str()};
+}
+
 }  // namespace db

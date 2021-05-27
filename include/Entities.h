@@ -18,7 +18,6 @@ enum sortParam {
 };
 
 class Employee {
-private:
 public:
     const long long id;
     long long companyId;
@@ -40,7 +39,6 @@ public:
 };
 
 class Client {
-private:
 public:
     const long long id;
     std::string fullName;
@@ -59,7 +57,6 @@ public:
 };
 
 class Order {
-private:
 public:
     enum statusEnum { vacant = 0, deleted = -1, booked = 1 };
 
@@ -113,7 +110,6 @@ public:
 };
 
 class Company {
-private:
 public:
     const long long id;
     std::string name;
