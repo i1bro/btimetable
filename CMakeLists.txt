@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 IF (WIN32)
     find_package(PostgreSQL REQUIRED)
+    find_package(OpenSSL REQUIRED)
     add_library(pqxx STATIC IMPORTED)
     set_target_properties(pqxx PROPERTIES IMPORTED_LOCATION ../../../lib/pqxx.lib)
     set(PQXX_LIB pqxx)

@@ -159,7 +159,7 @@ void CompanyAPI::deleteOrder(const std::string &token, long long orderId) {
         throw std::exception();  // TODO
     }
     auto order = Service::getOrderById(orderId);
-    if (order.companyId != parsed.first) {
+    if (order.companyId != parsed.first || order.status != Order::vacant) {
         throw std::exception();  // TODO
     }
     Service::deleteOrder(id);
