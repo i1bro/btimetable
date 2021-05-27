@@ -67,6 +67,8 @@ public:
 
     static Company getCompanyById(long long id);
 
+    static void deleteEmployee(long long id);
+
     static void deleteOrder(long long id);
 
     static void bookOrder(long long orderId, long long clientId);

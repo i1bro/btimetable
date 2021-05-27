@@ -10,12 +10,12 @@ long long Service::createCompany(const std::string &phoneNumber,
     long long resId =
         storage
             .execute(
-                Insert(companies).set(Column::name, name).returning(Column::id))
+                Insert(tblCompanies).set(clmName, name).returning(clmId))
             .toLL();
-    storage.execute(Insert(companyAccounts)
-                        .set(Column::phoneNumber, phoneNumber)
-                        .set(Column::password, password)
-                        .set(Column::companyId, resId));
+    storage.execute(Insert(tblCompanyAccounts)
+                        .set(clmPhoneNumber, phoneNumber)
+                        .set(clmPassword, password)
+                        .set(clmCompanyId, resId));
     return resId;
 }
 
@@ -25,13 +25,13 @@ long long Service::createOrder(long long companyId,
                                long long duration,
                                long long employeeId) {
     long long resId = storage
-                          .execute(Insert(orders)
-                                       .set(Column::companyId, companyId)
-                                       .set(Column::title, title)
-                                       .set(Column::timeStart, timeStart)
-                                       .set(Column::duration, duration)
-                                       .set(Column::employeeId, employeeId)
-                                       .returning(Column::id))
+                          .execute(Insert(tblOrders)
+                                       .set(clmCompanyId, companyId)
+                                       .set(clmTitle, title)
+                                       .set(clmTimeStart, timeStart)
+                                       .set(clmDuration, duration)
+                                       .set(clmEmployeeId, employeeId)
+                                       .returning(clmId))
                           .toLL();
     return resId;
 }
@@ -39,10 +39,10 @@ long long Service::createOrder(long long companyId,
 long long Service::createEmployee(long long companyId,
                                   const std::string &fullName) {
     long long resId = storage
-                          .execute(Insert(employees)
-                                       .set(Column::companyId, companyId)
-                                       .set(Column::fullName, fullName)
-                                       .returning(Column::id))
+                          .execute(Insert(tblEmployees)
+                                       .set(clmCompanyId, companyId)
+                                       .set(clmFullName, fullName)
+                                       .returning(clmId))
                           .toLL();
     return resId;
 }
@@ -52,165 +52,170 @@ long long Service::createClient(const std::string &phoneNumber,
                                 const std::string &fullName,
                                 const std::string &email) {
     long long resId = storage
-                          .execute(Insert(clients)
-                                       .set(Column::fullName, fullName)
-                                       .set(Column::phoneNumber, phoneNumber)
-                                       .set(Column::email, email)
-                                       .returning(Column::id))
+                          .execute(Insert(tblClients)
+                                       .set(clmFullName, fullName)
+                                       .set(clmPhoneNumber, phoneNumber)
+                                       .set(clmEmail, email)
+                                       .returning(clmId))
                           .toLL();
-    storage.execute(Insert(clientAccounts)
-                        .set(Column::phoneNumber, phoneNumber)
-                        .set(Column::password, password)
-                        .set(Column::clientId, resId));
+    storage.execute(Insert(tblClientAccounts)
+                        .set(clmPhoneNumber, phoneNumber)
+                        .set(clmPassword, password)
+                        .set(clmClientId, resId));
     return resId;
 }
 
 std::vector<long long> Service::listVacantOrdersOfCompany(long long id) {
     return storage
-        .execute(Select(orders)
-                     .columns({Column::id})
-                     .where(companyId, id)
-                     .where(status, Order::vacant))
+        .execute(Select(tblOrders)
+                     .columns({clmId})
+                     .where(clmCompanyId, id)
+                     .where(clmStatus, Order::vacant))
         .toVecLL();
 }
 
 std::vector<long long> Service::listBookedOrdersOfCompany(long long id) {
     return storage
-        .execute(Select(orders)
-                     .columns({Column::id})
-                     .where(companyId, id)
-                     .where(status, Order::booked))
+        .execute(Select(tblOrders)
+                     .columns({clmId})
+                     .where(clmCompanyId, id)
+                     .where(clmStatus, Order::booked))
         .toVecLL();
 }
 
 std::vector<long long> Service::listAllOrdersOfCompany(long long id) {
     return storage
-        .execute(Select(orders)
-                     .columns({Column::id})
-                     .where(companyId, id)
-                     .where(status, Order::deleted, "!="))
+        .execute(Select(tblOrders)
+                     .columns({clmId})
+                     .where(clmCompanyId, id)
+                     .where(clmStatus, Order::deleted, "!="))
         .toVecLL();
 }
 
 Order Service::getOrderById(long long id) {
-    return storage.execute(Select(orders).columns({all}).where(Column::id, id))
+    return storage.execute(Select(tblOrders).columns({clmAll}).where(clmId, id))
         .toOrder();
 }
 
 Employee Service::getEmployeeById(long long id) {
     return storage
-        .execute(Select(employees).columns({all}).where(Column::id, id))
+        .execute(Select(tblEmployees).columns({clmAll}).where(clmId, id))
         .toEmployee();
 }
 
 Client Service::getClientById(long long id) {
-    return storage.execute(Select(clients).columns({all}).where(Column::id, id))
+    return storage.execute(Select(tblClients).columns({clmAll}).where(clmId, id))
         .toClient();
 }
 
 Company Service::getCompanyById(long long id) {
     return storage
-        .execute(Select(companies).columns({all}).where(Column::id, id))
+        .execute(Select(tblCompanies).columns({clmAll}).where(clmId, id))
         .toCompany();
 }
 
 void Service::saveOrder(const Order &order) {
-    storage.execute(Update(orders)
-                        .set(title, order.title)
-                        .set(timeStart, order.timeStart)
-                        .set(duration, order.duration)
-                        .set(employeeId, order.employeeId)
-                        .where(id, order.id));
+    storage.execute(Update(tblOrders)
+                        .set(clmTitle, order.title)
+                        .set(clmTimeStart, order.timeStart)
+                        .set(clmDuration, order.duration)
+                        .set(clmEmployeeId, order.employeeId)
+                        .where(clmId, order.id));
     if (order.clientId == -1) {
-        storage.execute(Update(orders).setNull(clientId).where(id, order.id));
+        storage.execute(Update(tblOrders).setNull(clmClientId).where(clmId, order.id));
     } else {
         storage.execute(
-            Update(orders).set(clientId, order.clientId).where(id, order.id));
+            Update(tblOrders).set(clmClientId, order.clientId).where(clmId, order.id));
     }
 }
 
 void Service::saveEmployee(const Employee &employee) {
-    storage.execute(Update(employees)
-                        .set(fullName, employee.fullName)
-                        .where(id, employee.id));
+    storage.execute(Update(tblEmployees)
+                        .set(clmFullName, employee.fullName)
+                        .where(clmId, employee.id));
 }
 
 void Service::saveClient(const Client &client) {
-    storage.execute(Update(clients)
-                        .set(fullName, client.fullName)
-                        .set(phoneNumber, client.phoneNumber)
-                        .set(email, client.email)
-                        .where(id, client.id));
+    storage.execute(Update(tblClients)
+                        .set(clmFullName, client.fullName)
+                        .set(clmPhoneNumber, client.phoneNumber)
+                        .set(clmEmail, client.email)
+                        .where(clmId, client.id));
 }
 
 void Service::saveCompany(const Company &company) {
     storage.execute(
-        Update(companies).set(name, company.name).where(id, company.id));
+        Update(tblCompanies).set(clmName, company.name).where(clmId, company.id));
 }
 
 std::vector<long long> Service::listVacantOrdersOfEmployee(long long id) {
     return storage
-        .execute(Select(orders)
-                     .columns({Column::id})
-                     .where(employeeId, id)
-                     .where(status, Order::vacant))
+        .execute(Select(tblOrders)
+                     .columns({clmId})
+                     .where(clmEmployeeId, id)
+                     .where(clmStatus, Order::vacant))
         .toVecLL();
 }
 
 std::vector<long long> Service::listBookedOrdersOfEmployee(long long id) {
     return storage
-        .execute(Select(orders)
-                     .columns({Column::id})
-                     .where(employeeId, id)
-                     .where(status, Order::booked))
+        .execute(Select(tblOrders)
+                     .columns({clmId})
+                     .where(clmEmployeeId, id)
+                     .where(clmStatus, Order::booked))
         .toVecLL();
 }
 
 std::vector<long long> Service::listAllOrdersOfEmployee(long long id) {
     return storage
-        .execute(Select(orders)
-                     .columns({Column::id})
-                     .where(employeeId, id)
-                     .where(status, Order::deleted, "!="))
+        .execute(Select(tblOrders)
+                     .columns({clmId})
+                     .where(clmEmployeeId, id)
+                     .where(clmStatus, Order::deleted, "!="))
         .toVecLL();
 }
 
 std::vector<long long> Service::listOrdersOfClient(long long id) {
     return storage
-        .execute(Select(orders)
-                     .columns({Column::id})
-                     .where(clientId, id)
-                     .where(status, Order::deleted, "!="))
+        .execute(Select(tblOrders)
+                     .columns({clmId})
+                     .where(clmClientId, id)
+                     .where(clmStatus, Order::deleted, "!="))
         .toVecLL();
 }
 
 std::vector<long long> Service::listCompanies() {
-    return storage.execute(Select(companies).columns({id})).toVecLL();
+    return storage.execute(Select(tblCompanies).columns({clmId})).toVecLL();
 }
 
 std::vector<long long> Service::listEmployeesOfCompany(long long id) {
     return storage
-        .execute(Select(employees).columns({Column::id}).where(companyId, id))
+        .execute(Select(tblEmployees).columns({clmId}).where(clmCompanyId, id))
         .toVecLL();
+}
+
+void Service::deleteEmployee(long long id) {
+    storage.execute(
+            Update(tblEmployees).set(clmIsDeleted, true).where(clmId, id));
 }
 
 void Service::deleteOrder(long long id) {
     storage.execute(
-        Update(orders).set(status, Order::deleted).where(Column::id, id));
+        Update(tblOrders).set(clmStatus, Order::deleted).where(clmId, id));
 }
 
 void Service::bookOrder(long long orderId, long long clientId) {
-    storage.execute(Update(orders)
-                        .set(Column::clientId, clientId)
-                        .set(status, Order::booked)
-                        .where(Column::id, orderId));
+    storage.execute(Update(tblOrders)
+                        .set(clmClientId, clientId)
+                        .set(clmStatus, Order::booked)
+                        .where(clmId, orderId));
 }
 
 void Service::cancelOrder(long long id) {
-    storage.execute(Update(orders)
-                        .setNull(Column::clientId)
-                        .set(status, Order::vacant)
-                        .where(Column::id, id));
+    storage.execute(Update(tblOrders)
+                        .setNull(clmClientId)
+                        .set(clmStatus, Order::vacant)
+                        .where(clmId, id));
 }
 
 void Service::rateOrder(long long id, int rating) {
@@ -220,54 +225,54 @@ void Service::rateOrder(long long id, int rating) {
     auto order = getOrderById(id);
     long long curCompanyRatingSum =
         storage
-            .execute(Select(companies)
-                         .columns({Column::ratingSum})
-                         .where(Column::id, order.companyId))
+            .execute(Select(tblCompanies)
+                         .columns({clmRatingSum})
+                         .where(clmId, order.companyId))
             .toLL();
     long long curEmployeeRatingSum =
         storage
-            .execute(Select(employees)
-                         .columns({Column::ratingSum})
-                         .where(Column::id, order.employeeId))
+            .execute(Select(tblEmployees)
+                         .columns({clmRatingSum})
+                         .where(clmId, order.employeeId))
             .toLL();
     storage.execute(
-        Update(companies)
-            .set(Column::ratingSum, curCompanyRatingSum + rating - order.rating)
-            .where(Column::id, order.companyId));
-    storage.execute(Update(employees)
-                        .set(Column::ratingSum,
+        Update(tblCompanies)
+            .set(clmRatingSum, curCompanyRatingSum + rating - order.rating)
+            .where(clmId, order.companyId));
+    storage.execute(Update(tblEmployees)
+                        .set(clmRatingSum,
                              curEmployeeRatingSum + rating - order.rating)
-                        .where(Column::id, order.employeeId));
+                        .where(clmId, order.employeeId));
     if (order.rating == 0) {
         long long curCompanyRatingCnt =
             storage
-                .execute(Select(companies)
-                             .columns({Column::ratingCnt})
-                             .where(Column::id, order.companyId))
+                .execute(Select(tblCompanies)
+                             .columns({clmRatingCnt})
+                             .where(clmId, order.companyId))
                 .toLL();
         long long curEmployeeRatingCnt =
             storage
-                .execute(Select(employees)
-                             .columns({Column::ratingCnt})
-                             .where(Column::id, order.employeeId))
+                .execute(Select(tblEmployees)
+                             .columns({clmRatingCnt})
+                             .where(clmId, order.employeeId))
                 .toLL();
-        storage.execute(Update(companies)
-                            .set(Column::ratingCnt, curCompanyRatingCnt + 1)
-                            .where(Column::id, order.companyId));
-        storage.execute(Update(employees)
-                            .set(Column::ratingCnt, curEmployeeRatingCnt + 1)
-                            .where(Column::id, order.employeeId));
+        storage.execute(Update(tblCompanies)
+                            .set(clmRatingCnt, curCompanyRatingCnt + 1)
+                            .where(clmId, order.companyId));
+        storage.execute(Update(tblEmployees)
+                            .set(clmRatingCnt, curEmployeeRatingCnt + 1)
+                            .where(clmId, order.employeeId));
     }
     storage.execute(
-        Update(orders).set(Column::rating, rating).where(Column::id, id));
+        Update(tblOrders).set(clmRating, rating).where(clmId, id));
 }
 
 long long Service::authorizeClient(const std::string &phoneNumber,
                                    const std::string &password) {
-    auto res = storage.execute(Select(clientAccounts)
-                                   .columns({clientId})
-                                   .where(Column::phoneNumber, phoneNumber)
-                                   .where(Column::password, password));
+    auto res = storage.execute(Select(tblClientAccounts)
+                                   .columns({clmClientId})
+                                   .where(clmPhoneNumber, phoneNumber)
+                                   .where(clmPassword, password));
     try {
         return res.toLL();
     } catch (...) {
@@ -277,10 +282,10 @@ long long Service::authorizeClient(const std::string &phoneNumber,
 
 long long Service::authorizeCompany(const std::string &phoneNumber,
                                     const std::string &password) {
-    auto res = storage.execute(Select(companyAccounts)
-                                   .columns({companyId})
-                                   .where(Column::phoneNumber, phoneNumber)
-                                   .where(Column::password, password));
+    auto res = storage.execute(Select(tblCompanyAccounts)
+                                   .columns({clmCompanyId})
+                                   .where(clmPhoneNumber, phoneNumber)
+                                   .where(clmPassword, password));
     try {
         return res.toLL();
     } catch (...) {
@@ -295,26 +300,26 @@ std::vector<long long> Service::listOrders(long long companyId,
                                            long long leastDuration,
                                            sortParam sortBy,
                                            bool reversed) {
-    auto query = Select(orders)
-                     .columns({id})
-                     .where(Column::status, status)
-                     .where(Column::duration, leastDuration, ">")
-                     .where(Column::timeStart, leastTimeStart, ">");
+    auto query = Select(tblOrders)
+                     .columns({clmId})
+                     .where(clmStatus, status)
+                     .where(clmDuration, leastDuration, ">")
+                     .where(clmTimeStart, leastTimeStart, ">");
     if (companyId != -1) {
-        query.where(Column::companyId, companyId);
+        query.where(clmCompanyId, companyId);
     }
     if (employeeId != -1) {
-        query.where(Column::employeeId, employeeId);
+        query.where(clmEmployeeId, employeeId);
     }
     switch (sortBy) {
         case byId:
-            query.orderedBy(id, reversed);
+            query.orderedBy(clmId, reversed);
             break;
         case byTimeStart:
-            query.orderedBy(timeStart, reversed);
+            query.orderedBy(clmTimeStart, reversed);
             break;
         case byDuration:
-            query.orderedBy(duration, reversed);
+            query.orderedBy(clmDuration, reversed);
             break;
         default:
             throw std::exception();  // TODO

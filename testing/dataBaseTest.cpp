@@ -18,7 +18,7 @@ bool isIn(const std::vector<long long> &a, long long b) {
 
 TEST_CASE("Create structures") {
     SUBCASE("Client") {
-        auto id = db::ClientAPI::createClient("+7-987-654-32-10", "password",
+        auto id = db::ClientAPI::createClient("+7-987-654-32-10", "clmPassword",
                                               "Vasya", "vasya@mail.com");
         CHECK(db::ClientAPI::listOrdersOfClient(id).empty());
 
@@ -29,7 +29,7 @@ TEST_CASE("Create structures") {
     }
 
     SUBCASE("Company") {
-        auto id = db::CompanyAPI::createCompany("+7-987-654-32-11", "password",
+        auto id = db::CompanyAPI::createCompany("+7-987-654-32-11", "clmPassword",
                                                 "Tuturu");
 
         auto b = db::CompanyAPI::getCompany(id);
@@ -39,7 +39,7 @@ TEST_CASE("Create structures") {
 
     SUBCASE("Employee") {
         auto company = db::CompanyAPI::createCompany("+7-987-654-32-12",
-                                                     "password", "Zavod");
+                                                     "clmPassword", "Zavod");
         auto id = db::CompanyAPI::createEmployee(company, "Vasya");
         CHECK(isIn(db::CompanyAPI::listEmployeesOfCompany(company), id));
 
@@ -50,7 +50,7 @@ TEST_CASE("Create structures") {
 
     SUBCASE("Order") {
         auto company = db::CompanyAPI::createCompany("+7-987-654-32-13",
-                                                     "password", "Zavod");
+                                                     "clmPassword", "Zavod");
         auto employee = db::CompanyAPI::createEmployee(company, "Vasya");
         auto id =
             db::CompanyAPI::createOrder(company, "nogotochki", 1, 2, employee);
@@ -79,7 +79,7 @@ TEST_CASE("Create structures") {
 
 TEST_CASE("Change structures") {
     SUBCASE("Client email") {
-        auto id = db::ClientAPI::createClient("+7-987-654-32-14", "password",
+        auto id = db::ClientAPI::createClient("+7-987-654-32-14", "clmPassword",
                                               "Vasya", "vasya@mail.com");
 
         db::ClientAPI::changeClientEmail(id, "petya@mail.com");
@@ -90,7 +90,7 @@ TEST_CASE("Change structures") {
     }
 
     SUBCASE("Client fullName") {
-        auto id = db::ClientAPI::createClient("+7-987-654-32-15", "password",
+        auto id = db::ClientAPI::createClient("+7-987-654-32-15", "clmPassword",
                                               "Vasya", "vasya@mail.com");
 
         db::ClientAPI::changeClientFullName(id, "Petya");
@@ -102,7 +102,7 @@ TEST_CASE("Change structures") {
 
     SUBCASE("Order title") {
         auto company = db::CompanyAPI::createCompany("+7-987-654-32-17",
-                                                     "password", "Zavod");
+                                                     "clmPassword", "Zavod");
         auto employee = db::CompanyAPI::createEmployee(company, "Vasya");
         auto id =
             db::CompanyAPI::createOrder(company, "nogotochki", 1, 2, employee);
@@ -119,7 +119,7 @@ TEST_CASE("Change structures") {
 
     SUBCASE("Order timeStart") {
         auto company = db::CompanyAPI::createCompany("+7-987-654-32-18",
-                                                     "password", "Zavod");
+                                                     "clmPassword", "Zavod");
         auto employee = db::CompanyAPI::createEmployee(company, "Vasya");
         auto id =
             db::CompanyAPI::createOrder(company, "nogotochki", 1, 2, employee);
@@ -137,7 +137,7 @@ TEST_CASE("Change structures") {
 
     SUBCASE("Order duration") {
         auto company = db::CompanyAPI::createCompany("+7-987-654-32-19",
-                                                     "password", "Zavod");
+                                                     "clmPassword", "Zavod");
         auto employee = db::CompanyAPI::createEmployee(company, "Vasya");
         auto id =
             db::CompanyAPI::createOrder(company, "nogotochki", 1, 2, employee);
@@ -155,7 +155,7 @@ TEST_CASE("Change structures") {
 
     SUBCASE("Employee fullName") {
         auto company = db::CompanyAPI::createCompany("+7-987-654-32-20",
-                                                     "password", "Zavod");
+                                                     "clmPassword", "Zavod");
         auto id = db::CompanyAPI::createEmployee(company, "Vasya");
 
         db::CompanyAPI::changeEmployeeFullName(company, id, "Petya");
@@ -167,9 +167,9 @@ TEST_CASE("Change structures") {
 
 TEST_CASE("Booking and cancelling") {
     auto company =
-        db::CompanyAPI::createCompany("+7-987-654-32-21", "password", "Zavod");
+        db::CompanyAPI::createCompany("+7-987-654-32-21", "clmPassword", "Zavod");
     auto employee = db::CompanyAPI::createEmployee(company, "Petya");
-    auto client = db::ClientAPI::createClient("+7-987-654-32-22", "password",
+    auto client = db::ClientAPI::createClient("+7-987-654-32-22", "clmPassword",
                                               "Vasya", "vasya@mail.com");
     auto id =
         db::CompanyAPI::createOrder(company, "nogotochki", 1, 2, employee);

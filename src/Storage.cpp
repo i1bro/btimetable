@@ -5,34 +5,35 @@ namespace db {
 namespace {
 const std::string &nameOfTable(Table t) {
     static std::unordered_map<Table, const std::string> nameOfTable = {
-        {clients, "clients"},
-        {employees, "employees"},
-        {orders, "orders"},
-        {companies, "companies"},
-        {clientAccounts, "client_accounts"},
-        {companyAccounts, "company_accounts"}};
+        {tblClients,         "clients"},
+        {tblEmployees,       "employees"},
+        {tblOrders,          "orders"},
+        {tblCompanies,       "companies"},
+        {tblClientAccounts,  "client_accounts"},
+        {tblCompanyAccounts, "company_accounts"}};
     return nameOfTable[t];
 };
 
 const std::string &nameOfColumn(Column col) {
     static std::unordered_map<Column, const std::string> nameOfColumn = {
-        {name, "name"},
-        {fullName, "full_name"},
-        {phoneNumber, "phone_number"},
-        {email, "email"},
-        {title, "title"},
-        {timeStart, "time_start"},
-        {duration, "duration"},
-        {clientId, "client_id"},
-        {companyId, "company_id"},
-        {employeeId, "employee_id"},
-        {id, "id"},
-        {rating, "rating"},
-        {ratingSum, "rating_sum"},
-        {ratingCnt, "rating_cnt"},
-        {status, "status"},
-        {password, "password"},
-        {all, "*"}};
+        {clmName, "name"},
+        {clmFullName, "full_name"},
+        {clmPhoneNumber, "phone_number"},
+        {clmEmail,      "email"},
+        {clmTitle,      "title"},
+        {clmTimeStart,  "time_start"},
+        {clmDuration,   "duration"},
+        {clmClientId,   "client_id"},
+        {clmCompanyId,  "company_id"},
+        {clmEmployeeId, "employee_id"},
+        {clmId,         "id"},
+        {clmRating,     "rating"},
+        {clmRatingSum,  "rating_sum"},
+        {clmRatingCnt,  "rating_cnt"},
+        {clmStatus,     "status"},
+        {clmIsDeleted,  "is_deleted"},
+        {clmPassword,   "password"},
+        {clmAll,        "*"}};
     return nameOfColumn[col];
 };
 
@@ -141,7 +142,7 @@ std::string Insert::build() {
         s << " " << val.second;
     }
     s << ")";
-    if (returnCol != all) {
+    if (returnCol != clmAll) {
         s << " RETURNING " << nameOfColumn(returnCol);
     }
     return s.str();
@@ -287,7 +288,7 @@ Employee Result::toEmployee() {
     }
     Employee employee(
         cur["id"].as<long long>(), cur["company_id"].as<long long>(),
-        cur["full_name"].c_str(), rating, cur["rating_cnt"].as<long long>());
+        cur["full_name"].c_str(), rating, cur["rating_cnt"].as<long long>(), cur["is_deleted"].as<bool>());
     return employee;
 }
 

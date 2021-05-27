@@ -45,6 +45,7 @@ int main() {
             "full_name VARCHAR(255) NOT NULL,"
             "rating_sum BIGINT DEFAULT 0,"
             "rating_cnt BIGINT DEFAULT 0,"
+            "is_deleted BOOLEAN DEFAULT FALSE,"
             "PRIMARY KEY(id),"
             "CONSTRAINT fk_company "
             "FOREIGN KEY(company_id) "

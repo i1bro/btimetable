@@ -25,32 +25,33 @@ struct processingQueryError : std::runtime_error {
 };
 
 enum Table {
-    clients,
-    employees,
-    orders,
-    companies,
-    clientAccounts,
-    companyAccounts
+    tblClients,
+    tblEmployees,
+    tblOrders,
+    tblCompanies,
+    tblClientAccounts,
+    tblCompanyAccounts
 };
 
 enum Column {
-    name,
-    fullName,
-    phoneNumber,
-    email,
-    title,
-    timeStart,
-    duration,
-    clientId,
-    companyId,
-    employeeId,
-    id,
-    password,
-    rating,
-    ratingSum,
-    ratingCnt,
-    status,
-    all
+    clmName,
+    clmFullName,
+    clmPhoneNumber,
+    clmEmail,
+    clmTitle,
+    clmTimeStart,
+    clmDuration,
+    clmClientId,
+    clmCompanyId,
+    clmEmployeeId,
+    clmId,
+    clmPassword,
+    clmRating,
+    clmRatingSum,
+    clmRatingCnt,
+    clmStatus,
+    clmIsDeleted,
+    clmAll
 };
 
 class Operation {
@@ -90,7 +91,7 @@ public:
 class Insert : public Operation {
 private:
     std::vector<std::pair<Column, std::string>> values;
-    Column returnCol = all;
+    Column returnCol = clmAll;
 
 public:
     Insert() = delete;

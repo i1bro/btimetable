@@ -1,5 +1,4 @@
 #include "CompanyAPI.h"
-#include <utility>
 #include "btt/Service.h"
 
 namespace db {
@@ -153,6 +152,18 @@ void CompanyAPI::changeEmployeeFullName(const std::string &token,
     Service::saveEmployee(employee);
 }
 
+void CompanyAPI::deleteEmployee(const std::string &token, long long int employeeId) {
+    auto parsed = Service::verifyToken(token);
+    if (parsed.second != "company") {
+        throw std::exception();  // TODO
+    }
+    auto employee = Service::getOrderById(employeeId);
+    if (employee.companyId != parsed.first || !Service::listBookedOrdersOfEmployee(employeeId).empty()) {
+        throw std::exception();  // TODO
+    }
+    Service::deleteEmployee(employeeId);
+}
+
 void CompanyAPI::deleteOrder(const std::string &token, long long orderId) {
     auto parsed = Service::verifyToken(token);
     if (parsed.second != "company") {
@@ -162,7 +173,7 @@ void CompanyAPI::deleteOrder(const std::string &token, long long orderId) {
     if (order.companyId != parsed.first || order.status != Order::vacant) {
         throw std::exception();  // TODO
     }
-    Service::deleteOrder(id);
+    Service::deleteOrder(orderId);
 }
 
 std::vector<long long> CompanyAPI::listVacantOrdersOfEmployee(

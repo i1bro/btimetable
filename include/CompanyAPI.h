@@ -54,6 +54,8 @@ public:
                                        long long employeeId,
                                        std::string fullName);
 
+    static void deleteEmployee(const std::string &token, long long employeeId);
+
     static void deleteOrder(const std::string &token, long long orderId);
 
     static std::vector<long long> listVacantOrdersOfEmployee(
