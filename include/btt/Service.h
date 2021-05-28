@@ -1,38 +1,45 @@
 #ifndef BTIMETABLE_SERVICE_H
 #define BTIMETABLE_SERVICE_H
 
+#include <string>
+#include <vector>
 #include "Entities.h"
 #include "Storage.h"
 
-namespace dataBase {
+namespace db {
 
 class Service {
 private:
-    inline static Storage storage = Storage();
+    static Storage &storage();
 
 public:
     Service() = default;
 
-    static Company createCompany(std::string name);
+    static long long createCompany(const std::string &phoneNumber,
+                                   const std::string &password,
+                                   const std::string &name);
 
-    static Order createOrder(long long companyId,
-                             std::string title,
-                             int timeStart,
-                             int duration,
-                             int employeeId);
+    static long long createOrder(long long companyId,
+                                 const std::string &title,
+                                 long long timeStart,
+                                 long long duration,
+                                 long long employeeId);
 
-    static Order createOrder(long long companyId,
-                             std::string title,
-                             int timeStart,
-                             int duration,
-                             int clientId,
-                             int employeeId);
+    static long long createEmployee(long long companyId,
+                                    const std::string &fullName);
 
-    static Employee createEmployee(long long companyId, std::string fullName);
+    static long long createClient(const std::string &phoneNumber,
+                                  const std::string &password,
+                                  const std::string &fullName,
+                                  const std::string &email);
 
-    static Client createClient(std::string fullName,
-                               std::string phoneNumber,
-                               std::string email);
+    static long long authorizeClient(const std::string &phoneNumber,
+                                     const std::string &password);
+
+    static long long authorizeCompany(const std::string &phoneNumber,
+                                      const std::string &password);
+
+    static std::vector<long long> listOrders(const orderSearchParams &params);
 
     static std::vector<long long> listVacantOrdersOfCompany(long long id);
 
@@ -56,9 +63,15 @@ public:
 
     static Company getCompanyById(long long id);
 
-    // void deleteOrder(long long Id);
+    static void deleteEmployee(long long id);
 
-    // void deleteEmployee(long long Id);
+    static void deleteOrder(long long id);
+
+    static void bookOrder(long long orderId, long long clientId);
+
+    static void cancelOrder(long long id);
+
+    static void rateOrder(long long id, int rating);
 
     static std::vector<long long> listVacantOrdersOfEmployee(long long id);
 
@@ -68,11 +81,18 @@ public:
 
     static std::vector<long long> listOrdersOfClient(long long id);
 
-    static std::vector<long long> listCompanies();
+    static std::vector<long long> listCompanies(sortParam sorted = byRating);
 
-    static std::vector<long long> listEmployeesOfCompany(long long id);
+    static std::vector<long long> listEmployeesOfCompany(
+        long long id,
+        sortParam sorted = byRating);
+
+    static std::string createToken(long long id, const std::string &role);
+
+    static long long verifyToken(const std::string &token,
+                                 const std::string &role);
 };
 
-}  // namespace dataBase
+}  // namespace db
 
 #endif  // BTIMETABLE_SERVICE_H

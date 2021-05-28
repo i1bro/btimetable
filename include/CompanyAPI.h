@@ -1,49 +1,80 @@
 #ifndef BTIMETABLE_COMPANYAPI_H
 #define BTIMETABLE_COMPANYAPI_H
 
+#include <vector>
 #include "Entities.h"
 
-namespace dataBase {
+namespace db {
 class CompanyAPI {
 public:
-    static Company createCompany(std::string name);
+    static std::string createCompany(const std::string &phoneNumber,
+                                     const std::string &password,
+                                     const std::string &name);
 
-    static Order createOrder(long long companyId,
-                             std::string title,
-                             int timeStart,
-                             int duration,
-                             int employeeId);
+    static std::string authorizeCompany(const std::string &phoneNumber,
+                                        const std::string &password);
 
-    static Employee createEmployee(long long companyId, std::string fullName);
+    static long long createOrder(const std::string &token,
+                                 const std::string &title,
+                                 long long timeStart,
+                                 long long duration,
+                                 long long employeeId);
 
-    static std::vector<long long> listVacantOrdersOfCompany(long long id);
+    static long long createEmployee(const std::string &token,
+                                    const std::string &fullName);
 
-    static std::vector<long long> listBookedOrdersOfCompany(long long id);
+    static std::vector<long long> listVacantOrdersOfCompany(
+        const std::string &token);
 
-    static std::vector<long long> listAllOrdersOfCompany(long long id);
+    static std::vector<long long> listBookedOrdersOfCompany(
+        const std::string &token);
 
-    static Order getOrderById(long long id);
+    static std::vector<long long> listAllOrdersOfCompany(
+        const std::string &token);
 
-    static Employee getEmployeeById(long long id);
+    static Order getOrderById(const std::string &token, long long orderId);
 
-    static Company getCompanyById(long long id);
+    static Employee getEmployeeById(const std::string &token,
+                                    long long employeeId);
 
-    static void changeOrderTitle(long long id, std::string title);
+    static Company getCompany(const std::string &token);
 
-    static void changeOrderTimeStart(long long id, int timeStart);
+    static void changeOrderTitle(const std::string &token,
+                                 long long orderId,
+                                 std::string title);
 
-    static void changeOrderDuration(long long id, int duration);
+    static void changeOrderTimeStart(const std::string &token,
+                                     long long orderId,
+                                     long long timeStart);
 
-    static void changeEmployeeFullName(long long id, std::string fullName);
+    static void changeOrderDuration(const std::string &token,
+                                    long long orderId,
+                                    long long duration);
 
-    static std::vector<long long> listVacantOrdersOfEmployee(long long id);
+    static void changeEmployeeFullName(const std::string &token,
+                                       long long employeeId,
+                                       std::string fullName);
 
-    static std::vector<long long> listBookedOrdersOfEmployee(long long id);
+    static void deleteEmployee(const std::string &token, long long employeeId);
 
-    static std::vector<long long> listAllOrdersOfEmployee(long long id);
+    static void deleteOrder(const std::string &token, long long orderId);
 
-    static std::vector<long long> listEmployeesOfCompany(long long id);
+    static std::vector<long long> listVacantOrdersOfEmployee(
+        const std::string &token,
+        long long employeeId);
+
+    static std::vector<long long> listBookedOrdersOfEmployee(
+        const std::string &token,
+        long long employeeId);
+
+    static std::vector<long long> listAllOrdersOfEmployee(
+        const std::string &token,
+        long long employeeId);
+
+    static std::vector<long long> listEmployeesOfCompany(
+        const std::string &token,
+        sortParam sorted = byRating);
 };
-}  // namespace dataBase
+}  // namespace db
 
 #endif  // BTIMETABLE_COMPANYAPI_H

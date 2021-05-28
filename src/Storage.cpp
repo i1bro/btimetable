@@ -1,253 +1,432 @@
 #include "btt/Storage.h"
-#include <nlohmann/json.hpp>
+#include <iostream>
 
-namespace dataBase {
+namespace db {
+namespace {
+const std::string &nameOfTable(Table t) {
+    static std::unordered_map<Table, const std::string> nameOfTable = {
+        {tblClients, "clients"},
+        {tblEmployees, "employees"},
+        {tblOrders, "orders"},
+        {tblCompanies, "companies"},
+        {tblClientAccounts, "client_accounts"},
+        {tblCompanyAccounts, "company_accounts"}};
+    return nameOfTable[t];
+};
 
-long long Storage::giveEmployeeId() {
-    return redis.incr("lastEmployeeId");
+const std::string &nameOfColumn(Column col) {
+    static std::unordered_map<Column, const std::string> nameOfColumn = {
+        {clmName, "name"},
+        {clmFullName, "full_name"},
+        {clmPhoneNumber, "phone_number"},
+        {clmEmail, "email"},
+        {clmTitle, "title"},
+        {clmTimeStart, "time_start"},
+        {clmDuration, "duration"},
+        {clmClientId, "client_id"},
+        {clmCompanyId, "company_id"},
+        {clmEmployeeId, "employee_id"},
+        {clmId, "id"},
+        {clmRating, "rating"},
+        {clmRatingSum, "rating_sum"},
+        {clmRatingCnt, "rating_cnt"},
+        {clmStatus, "status"},
+        {clmIsDeleted, "is_deleted"},
+        {clmPassword, "password"},
+        {clmAll, "*"}};
+    return nameOfColumn[col];
+};
+
+bool isIn(Column col, const std::vector<Column> &cols) {
+    for (auto c : cols) {
+        if (col == c) {
+            return true;
+        }
+    }
+    return false;
+}
+}  // namespace
+
+Update::Update(Table t) {
+    table = t;
 }
 
-long long Storage::giveClientId() {
-    long long id = redis.incr("lastClientId");
-    redis.sadd("CompanyList", std::to_string(id));
-    return id;
+std::string Update::build() {
+    if (values.empty()) {
+        throw buildingQueryError();
+    }
+    std::stringstream s;
+    s << "UPDATE " << nameOfTable(table) << " SET";
+    bool beg = true;
+    for (auto &val : values) {
+        if (!beg) {
+            s << ",";
+        }
+        beg = false;
+        s << " " << nameOfColumn(val.first) << " = " << val.second;
+    }
+    if (!conditions.empty()) {
+        s << " WHERE";
+        beg = true;
+        for (auto &val : conditions) {
+            if (!beg) {
+                s << " AND";
+            }
+            beg = false;
+            s << " " << nameOfColumn(val.first) << val.second;
+        }
+    }
+    return s.str();
 }
 
-long long Storage::giveOrderId() {
-    return redis.incr("lastEmployeeId");
+Update &Update::set(Column col, const std::string &value) {
+    values.emplace_back(col, "'" + value + "'");
+    return *this;
 }
 
-long long Storage::giveCompanyId() {
-    return redis.incr("lastCompanyId");
+Update &Update::set(Column col, long long value) {
+    values.emplace_back(col, std::to_string(value));
+    return *this;
 }
 
-void Storage::storeEmployee(const Employee &employee) {
-    std::string key = "Employee:" + std::to_string(employee.id);
-    nlohmann::json value;
-    value["fullName"] = employee.fullName;
-    redis.set(key, value.dump());
-    redis.set(key + ":companyId", std::to_string(employee.companyId));
-    redis.sadd("Company:" + std::to_string(employee.companyId) + ":employees",
-               std::to_string(employee.id));
+Update &Update::set(Column col, bool value) {
+    values.emplace_back(col, std::string{(value ? "TRUE" : "FALSE")});
+    return *this;
 }
 
-void Storage::storeClient(const Client &client) {
-    std::string key = "Client:" + std::to_string(client.id);
-    nlohmann::json value;
-    value["fullName"] = client.fullName;
-    value["phoneNumber"] = client.phoneNumber;
-    value["email"] = client.email;
-    redis.set(key, value.dump());
+Update &Update::setNull(Column col) {
+    values.emplace_back(col, "NULL");
+    return *this;
 }
 
-void Storage::storeOrder(const Order &order) {
-    std::string key = "Order:" + std::to_string(order.id);
-    nlohmann::json value;
-    value["title"] = order.title;
-    value["timeStart"] = order.timeStart;
-    value["duration"] = order.duration;
-    value["clientId"] = order.clientId;
-    value["employeeId"] = order.employeeId;
-    redis.set(key, value.dump());
-    redis.set(key + ":companyId", std::to_string(order.companyId));
-    if (order.employeeId == -1) {
-        redis.sadd(
-            "Company:" + std::to_string(order.companyId) + ":vacantOrders",
-            std::to_string(order.id));
-        redis.sadd(
-            "Employee:" + std::to_string(order.employeeId) + ":vacantOrders",
-            std::to_string(order.id));
-        redis.srem(
-            "Company:" + std::to_string(order.companyId) + ":bookedOrders",
-            std::to_string(order.id));
-        redis.srem(
-            "Employee:" + std::to_string(order.employeeId) + ":bookedOrders",
-            std::to_string(order.id));
+Update &Update::where(Column col, const std::string &value) {
+    conditions.emplace_back(col, " = '" + value + "'");
+    return *this;
+}
+
+Update &Update::where(Column col, bool value) {
+    conditions.emplace_back(col,
+                            " = " + std::string{(value ? "TRUE" : "FALSE")});
+    return *this;
+}
+
+Update &Update::where(Column col, long long value, const std::string &op) {
+    if (op != "=" && op != ">" && op != "<" && op != ">=" && op != "<=" &&
+        op != "!=") {
+        throw buildingQueryError();
+    }
+    conditions.emplace_back(col, " " + op + " " + std::to_string(value));
+    return *this;
+}
+
+Update &Update::whereIsNull(Column col) {
+    conditions.emplace_back(col, " IS NULL");
+    return *this;
+}
+
+Update &Update::whereIsNotNull(Column col) {
+    conditions.emplace_back(col, " IS NOT NULL");
+    return *this;
+}
+
+std::string Insert::build() {
+    if (values.empty()) {
+        throw buildingQueryError();
+    }
+    std::stringstream s;
+    s << "INSERT INTO " << nameOfTable(table) << "(";
+    bool beg = true;
+    for (auto &val : values) {
+        if (!beg) {
+            s << ",";
+        }
+        beg = false;
+        s << " " << nameOfColumn(val.first);
+    }
+    s << ") VALUES (";
+    beg = true;
+    for (auto &val : values) {
+        if (!beg) {
+            s << ",";
+        }
+        beg = false;
+        s << " " << val.second;
+    }
+    s << ")";
+    if (returnCol != clmAll) {
+        s << " RETURNING " << nameOfColumn(returnCol);
+    }
+    return s.str();
+}
+
+Insert::Insert(Table t) {
+    table = t;
+}
+
+Insert &Insert::set(Column col, const std::string &value) {
+    values.emplace_back(col, "'" + value + "'");
+    return *this;
+}
+
+Insert &Insert::set(Column col, long long value) {
+    values.emplace_back(col, std::to_string(value));
+    return *this;
+}
+
+Insert &Insert::setNull(Column col) {
+    values.emplace_back(col, "NULL");
+    return *this;
+}
+
+Insert &Insert::returning(Column col) {
+    returnCol = col;
+    return *this;
+}
+
+std::string Select::build() {
+    if (cols.empty()) {
+        throw buildingQueryError();
+    }
+    std::stringstream s;
+    s << "SELECT ";
+    bool beg = true;
+    for (auto &val : cols) {
+        if (!beg) {
+            s << ",";
+        }
+        beg = false;
+        s << " " << nameOfColumn(val);
+    }
+    s << " FROM " << nameOfTable(table);
+    if (!conditions.empty()) {
+        s << " WHERE";
+        beg = true;
+        for (auto &val : conditions) {
+            if (!beg) {
+                s << " AND";
+            }
+            beg = false;
+            s << " " << nameOfColumn(val.first) << val.second;
+        }
+    }
+    if (!orderStr.empty()) {
+        s << " ORDER BY";
+        beg = true;
+        for (auto &val : orderStr) {
+            if (!beg) {
+                s << ",";
+            }
+            beg = false;
+            s << " " << val;
+        }
+    }
+    return s.str();
+}
+
+Select::Select(Table t) {
+    table = t;
+}
+
+Select &Select::columns(const std::vector<Column> &cols_) {
+    for (auto c : cols_) {
+        cols.push_back(c);
+    }
+    return *this;
+}
+
+Select &Select::where(Column col, const std::string &value) {
+    conditions.emplace_back(col, " = '" + value + "'");
+    return *this;
+}
+
+Select &Select::where(Column col, bool value) {
+    conditions.emplace_back(col,
+                            " = " + std::string{(value ? "TRUE" : "FALSE")});
+    return *this;
+}
+
+Select &Select::where(Column col, long long value, const std::string &op) {
+    if (op != "=" && op != ">" && op != "<" && op != ">=" && op != "<=" &&
+        op != "!=") {
+        throw buildingQueryError();
+    }
+    conditions.emplace_back(col, " " + op + " " + std::to_string(value));
+    return *this;
+}
+
+Select &Select::whereIsNull(Column col) {
+    conditions.emplace_back(col, " IS NULL");
+    return *this;
+}
+
+Select &Select::whereIsNotNull(Column col) {
+    conditions.emplace_back(col, " IS NOT NULL");
+    return *this;
+}
+
+Select &Select::orderedBy(Column col, bool reversed) {
+    if (!reversed) {
+        orderStr.push_back(nameOfColumn(col) + " ASC");
     } else {
-        redis.sadd("Client:" + std::to_string(order.clientId) + ":orders",
-                   std::to_string(order.id));
-        redis.sadd(
-            "Company:" + std::to_string(order.companyId) + ":bookedOrders",
-            std::to_string(order.id));
-        redis.sadd(
-            "Employee:" + std::to_string(order.employeeId) + ":bookedOrders",
-            std::to_string(order.id));
-        redis.srem(
-            "Company:" + std::to_string(order.companyId) + ":vacantOrders",
-            std::to_string(order.id));
-        redis.srem(
-            "Employee:" + std::to_string(order.employeeId) + ":vacantOrders",
-            std::to_string(order.id));
+        orderStr.push_back(nameOfColumn(col) + " DESC");
+    }
+    return *this;
+}
+
+Select &Select::orderedBy(const std::string &condition) {
+    orderStr.push_back(condition);
+    return *this;
+}
+
+Result::Result(const pqxx::result &res_) {
+    res = res_;
+}
+
+Result &Result::operator=(const pqxx::result &res_) {
+    res = res_;
+    return *this;
+}
+
+Result::Result(pqxx::result &&res_) {
+    res = res_;
+}
+
+Result &Result::operator=(pqxx::result &&res_) {
+    res = res_;
+    return *this;
+}
+
+Employee Result::toEmployee(size_t ind) {
+    if(res.size() <= ind) {
+        throw processingQueryError();
+    }
+    try {
+        const pqxx::row &cur = res[ind];
+        double rating = 0;
+        if (cur["rating_cnt"].as<long long>() != 0) {
+            rating =
+                    cur["rating_sum"].as<double>() / cur["rating_cnt"].as<double>();
+        }
+        Employee employee(
+                cur["id"].as<long long>(), cur["company_id"].as<long long>(),
+                cur["full_name"].c_str(), rating, cur["rating_cnt"].as<long long>(),
+                cur["is_deleted"].as<bool>());
+        return employee;
+    } catch(...) {
+        throw processingQueryError();
     }
 }
 
-void Storage::storeCompany(const Company &company) {
-    std::string key = "Company:" + std::to_string(company.id);
-    nlohmann::json value;
-    value["name"] = company.name;
-    redis.set(key, value.dump());
-}
-
-Employee Storage::getEmployeeById(long long id) {
-    std::string key = "Employee:" + std::to_string(id);
-    nlohmann::json value = nlohmann::json::parse(redis.get(key).value());
-    Employee employee(id);
-    employee.companyId = std::stoll(redis.get(key + ":companyId").value());
-    employee.fullName = value["fullName"];
-    return std::move(employee);
-}
-
-Client Storage::getClientById(long long id) {
-    std::string key = "Client:" + std::to_string(id);
-    nlohmann::json value = nlohmann::json::parse(redis.get(key).value());
-    Client client(id);
-    client.fullName = value["fullName"];
-    client.phoneNumber = value["phoneNumber"];
-    client.email = value["email"];
-    return std::move(client);
-}
-
-Order Storage::getOrderById(long long id) {
-    std::string key = "Order:" + std::to_string(id);
-    nlohmann::json value = nlohmann::json::parse(redis.get(key).value());
-    Order order(id);
-    order.companyId = std::stoll(redis.get(key + ":companyId").value());
-    order.title = value["title"];
-    order.timeStart = value["timeStart"];
-    order.duration = value["duration"];
-    order.clientId = value["clientId"];
-    order.employeeId = value["employeeId"];
-    return std::move(order);
-}
-
-Company Storage::getCompanyById(long long id) {
-    std::string key = "Company:" + std::to_string(id);
-    nlohmann::json value = nlohmann::json::parse(redis.get(key).value());
-    Company company(id);
-    company.name = value["name"];
-    return std::move(company);
-}
-
-void Storage::deleteEmployee(long long id) {
-    /*std::string key = "Employee:" + std::to_string(id);
-    redis.del(key);
-    std::string companyId = redis.get(key + ":companyId").value();
-    redis.del(key + ":companyId");
-    redis.srem("Company:" + companyId + ":employees", std::to_string(id));*/
-    // TODO
-}
-
-void Storage::deleteClient(long long id) {
-    // TODO
-}
-
-void Storage::deleteOrder(long long id) {
-    // TODO
-}
-
-void Storage::deleteCompany(long long id) {
-    // TODO
-}
-
-long long Storage::getEmployeeOwner(long long employeeId) {
-    std::string key = "Employee:" + std::to_string(employeeId) + ":companyId";
-    std::string response = redis.get(key).value();
-    return std::stoll(response);
-}
-
-long long Storage::getOrderOwner(long long orderId) {
-    std::string key = "Order:" + std::to_string(orderId) + ":companyId";
-    std::string response = redis.get(key).value();
-    return std::stoll(response);
-}
-
-void Storage::deleteOrderOfClient(long long int clientId,
-                                  long long int orderId) {
-    std::string key = "Client:" + std::to_string(clientId) + ":orders";
-    redis.srem(key, std::to_string(orderId));
-}
-
-std::vector<long long> Storage::listVacantOrdersOfCompany(
-    long long employeeId) {
-    std::string key = "Company:" + std::to_string(employeeId) + ":vacantOrders";
-    std::vector<std::string> response;
-    redis.smembers(key, std::inserter(response, response.begin()));
-    std::vector<long long> ans;
-    for (auto &i : response) {
-        ans.push_back(stoll(i));
+Client Result::toClient(size_t ind) {
+    if(res.size() <= ind) {
+        throw processingQueryError();
     }
-    return std::move(ans);
-}
-
-std::vector<long long> Storage::listBookedOrdersOfCompany(
-    long long employeeId) {
-    std::string key = "Company:" + std::to_string(employeeId) + ":bookedOrders";
-    std::vector<std::string> response;
-    redis.smembers(key, std::inserter(response, response.begin()));
-    std::vector<long long> ans;
-    for (auto &i : response) {
-        ans.push_back(stoll(i));
+    try {
+        const pqxx::row &cur = res[ind];
+        Client client(cur["id"].as<long long>(), cur["full_name"].c_str(),
+                      cur["phone_number"].c_str(), cur["email"].c_str());
+        return client;
+    } catch(...) {
+        throw processingQueryError();
     }
-    return std::move(ans);
 }
 
-std::vector<long long> Storage::listVacantOrdersOfEmployee(
-    long long employeeId) {
-    std::string key =
-        "Employee:" + std::to_string(employeeId) + ":vacantOrders";
-    std::vector<std::string> response;
-    redis.smembers(key, std::inserter(response, response.begin()));
-    std::vector<long long> ans;
-    for (auto &i : response) {
-        ans.push_back(stoll(i));
+Order Result::toOrder(size_t ind) {
+    if(res.size() <= ind) {
+        throw processingQueryError();
     }
-    return std::move(ans);
-}
-
-std::vector<long long> Storage::listBookedOrdersOfEmployee(
-    long long employeeId) {
-    std::string key =
-        "Employee:" + std::to_string(employeeId) + ":bookedOrders";
-    std::vector<std::string> response;
-    redis.smembers(key, std::inserter(response, response.begin()));
-    std::vector<long long> ans;
-    for (auto &i : response) {
-        ans.push_back(stoll(i));
+    try {
+        const pqxx::row &cur = res[ind];
+        Order order(
+                cur["id"].as<long long>(), cur["company_id"].as<long long>(),
+                cur["title"].c_str(), cur["time_start"].as<long long>(),
+                cur["duration"].as<long long>(),
+                (cur["client_id"].is_null() ? -1 : cur["client_id"].as<long long>()),
+                cur["employee_id"].as<long long>(),
+                static_cast<Order::statusEnum>(cur["status"].as<int>()),
+                cur["rating"].as<int>());
+        return order;
+    } catch(...) {
+        throw processingQueryError();
     }
-    return std::move(ans);
 }
 
-std::vector<long long> Storage::listOrdersOfClient(long long int clientId) {
-    std::string key = "Client:" + std::to_string(clientId) + ":orders";
-    std::vector<std::string> response;
-    redis.smembers(key, std::inserter(response, response.begin()));
-    std::vector<long long> ans;
-    for (auto &i : response) {
-        ans.push_back(stoll(i));
+Company Result::toCompany(size_t ind) {
+    if(res.size() <= ind) {
+        throw processingQueryError();
     }
-    return std::move(ans);
-}
-
-std::vector<long long> Storage::listCompanies() {
-    std::string key = "ClientList";
-    std::vector<std::string> response;
-    redis.smembers(key, std::inserter(response, response.begin()));
-    std::vector<long long> ans;
-    for (auto &i : response) {
-        ans.push_back(stoll(i));
+    try {
+        const pqxx::row &cur = res[ind];
+        double rating = 0;
+        if (cur["rating_cnt"].as<long long>() != 0) {
+            rating =
+                    cur["rating_sum"].as<double>() / cur["rating_cnt"].as<double>();
+        }
+        Company company(cur["id"].as<long long>(), cur["name"].c_str(), rating,
+                        cur["rating_cnt"].as<long long>());
+        return company;
+    } catch(...) {
+        throw processingQueryError();
     }
-    return std::move(ans);
 }
 
-std::vector<long long> Storage::listEmployeesOfCompany(long long int id) {
-    std::string key = "Company:" + std::to_string(id) + ":employees";
-    std::vector<std::string> response;
-    redis.smembers(key, std::inserter(response, response.begin()));
-    std::vector<long long> ans;
-    for (auto &i : response) {
-        ans.push_back(stoll(i));
+long long Result::toLL() {
+    if(res.size() != 1 || res[0].size() != 1) {
+        throw processingQueryError();
     }
-    return std::move(ans);
+    try {
+        return res[0][0].as<long long>();
+    } catch(...) {
+        throw processingQueryError();
+    }
 }
 
-}  // namespace dataBase
+std::vector<long long> Result::toVecLL() {
+    if(res.empty()) {
+        return {};
+    }
+    if(res[0].size() != 1) {
+        throw processingQueryError();
+    }
+    try {
+        std::vector<long long> ans;
+        for (auto &&re : res) {
+            ans.push_back(re[0].as<long long>());
+        }
+        return ans;
+    } catch(...) {
+        throw processingQueryError();
+    }
+}
+
+size_t Result::size() {
+    return res.size();
+}
+
+Result Storage::execute(Operation &op) {
+    try {
+        pqxx::work W{C};
+        auto a = op.build();
+        Result res(W.exec(op.build()));
+        W.commit();
+        return res;
+    } catch (...) {
+        throw processingQueryError();
+    }
+}
+
+Result Storage::execute(pqxx::work &W, Operation &op) {
+    try {
+        auto a = op.build();
+        Result res(W.exec(op.build()));
+        return res;
+    } catch (...) {
+        throw processingQueryError();
+    }
+}
+
+pqxx::work Storage::startWork() {
+    return pqxx::work{C};
+}
+
+}  // namespace db

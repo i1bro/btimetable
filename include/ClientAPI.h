@@ -1,43 +1,57 @@
 #ifndef BTIMETABLE_CLIENTAPI_H
 #define BTIMETABLE_CLIENTAPI_H
 
+#include <vector>
 #include "Entities.h"
 
-namespace dataBase {
+namespace db {
 class ClientAPI {
 public:
-    static Client createClient(std::string fullName,
-                               std::string phoneNumber,
-                               std::string email);
+    static std::string createClient(const std::string &phoneNumber,
+                                    const std::string &password,
+                                    const std::string &fullName,
+                                    const std::string &email);
 
-    static std::vector<long long> listCompanies();
+    static std::string authorizeClient(const std::string &phoneNumber,
+                                       const std::string &password);
 
-    static std::vector<long long> listVacantOrdersOfCompany(long long id);
+    static std::vector<long long> listCompanies(sortParam sorted = byRating);
 
-    static std::vector<long long> listEmployeesOfCompany(long long id);
+    static std::vector<long long> listOrders(const orderSearchParams &params);
 
-    static void bookOrder(long long orderId, long long clientId);
+    static std::vector<long long> listVacantOrdersOfCompany(
+        long long companyId);
 
-    static void cancelOrder(long long orderId);
+    static std::vector<long long> listEmployeesOfCompany(
+        long long companyId,
+        sortParam sorted = byRating);
 
-    static Client getClientById(long long id);
+    static void bookOrder(const std::string &token, long long orderId);
 
-    static Order getOrderById(long long id);
+    static void cancelOrder(const std::string &token, long long orderId);
 
-    static Employee getEmployeeById(long long id);
+    static void rateOrder(const std::string &token,
+                          long long orderId,
+                          int rating);
 
-    static Company getCompanyById(long long id);
+    static Client getClient(const std::string &token);
 
-    static void changeClientFullName(long long id, std::string fullName);
+    static Order getOrderById(const std::string &token, long long orderId);
 
-    static void changeClientPhoneNumber(long long id, std::string phoneNumber);
+    static Employee getEmployeeById(long long employeeId);
 
-    static void changeClientEmail(long long id, std::string email);
+    static Company getCompanyById(long long companyId);
 
-    static std::vector<long long> listOrdersOfClient(long long id);
+    static void changeClientFullName(const std::string &token,
+                                     std::string fullName);
 
-    static std::vector<long long> listVacantOrdersOfEmployee(long long id);
+    static void changeClientEmail(const std::string &token, std::string email);
+
+    static std::vector<long long> listOrdersOfClient(const std::string &token);
+
+    static std::vector<long long> listVacantOrdersOfEmployee(
+        long long employeeId);
 };
-}  // namespace dataBase
+}  // namespace db
 
 #endif  // BTIMETABLE_CLIENTAPI_H

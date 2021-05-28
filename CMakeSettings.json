@@ -1,8 +1,8 @@
 ﻿{
   "configurations": [
     {
-      "name": "x64-Debug",
-      "generator": "Visual Studio 15 2017 Win64",
+      "name": "x64-Release",
+      "generator": "Ninja",
       "configurationType": "Release",
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${projectDir}\\out\\build\\${name}",

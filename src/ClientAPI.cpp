@@ -1,79 +1,126 @@
 #include "ClientAPI.h"
 #include "btt/Service.h"
 
-namespace dataBase {
+namespace db {
 
-Client ClientAPI::createClient(std::string fullName,
-                               std::string phoneNumber,
-                               std::string email) {
-    return Service::createClient(std::move(fullName), std::move(phoneNumber),
-                                 std::move(email));
+namespace {
+const std::string role = "client";
+
+struct bttClientPermissionError : bttError {
+    explicit bttClientPermissionError()
+        : bttError(
+              "You don't have access to this order: it is deleted or booked by "
+              "someone else.") {
+    }
+};
+}  // namespace
+
+std::string ClientAPI::createClient(const std::string &phoneNumber,
+                                    const std::string &password,
+                                    const std::string &fullName,
+                                    const std::string &email) {
+    return Service::createToken(
+        Service::createClient(phoneNumber, password, fullName, email), role);
 }
 
-std::vector<long long> ClientAPI::listCompanies() {
-    return Service::listCompanies();
+std::vector<long long> ClientAPI::listCompanies(sortParam sorted) {
+    return Service::listCompanies(sorted);
 }
 
-std::vector<long long> ClientAPI::listVacantOrdersOfCompany(long long id) {
-    return Service::listVacantOrdersOfCompany(id);
+std::vector<long long> ClientAPI::listVacantOrdersOfCompany(
+    long long companyId) {
+    return Service::listVacantOrdersOfCompany(companyId);
 }
 
-std::vector<long long> ClientAPI::listEmployeesOfCompany(long long id) {
-    return Service::listEmployeesOfCompany(id);
+std::vector<long long> ClientAPI::listEmployeesOfCompany(long long companyId,
+                                                         sortParam sorted) {
+    return Service::listEmployeesOfCompany(companyId, sorted);
 }
 
-void ClientAPI::bookOrder(long long orderId, long long clientId) {
+void ClientAPI::bookOrder(const std::string &token, long long orderId) {
+    auto parsed = Service::verifyToken(token, role);
     auto order = Service::getOrderById(orderId);
-    order.clientId = clientId;
-    Service::saveOrder(order);
+    if (order.status != Order::vacant) {
+        throw bttClientPermissionError();
+    }
+    Service::bookOrder(orderId, parsed);
 }
 
-void ClientAPI::cancelOrder(long long orderId) {
+void ClientAPI::cancelOrder(const std::string &token, long long orderId) {
+    auto parsed = Service::verifyToken(token, role);
     auto order = Service::getOrderById(orderId);
-    order.clientId = -1;
-    Service::saveOrder(order);
+    if (order.status != Order::booked || order.clientId != parsed) {
+        throw bttClientPermissionError();
+    }
+    Service::cancelOrder(orderId);
 }
 
-Client ClientAPI::getClientById(long long id) {
-    return Service::getClientById(id);
+void ClientAPI::rateOrder(const std::string &token,
+                          long long orderId,
+                          int rating) {
+    auto parsed = Service::verifyToken(token, role);
+    auto order = Service::getOrderById(orderId);
+    if (order.status != Order::booked || order.clientId != parsed) {
+        throw bttClientPermissionError();
+    }
+    Service::rateOrder(orderId, rating);
 }
 
-Order ClientAPI::getOrderById(long long id) {
-    return Service::getOrderById(id);
+Client ClientAPI::getClient(const std::string &token) {
+    auto parsed = Service::verifyToken(token, role);
+    return Service::getClientById(parsed);
 }
 
-Employee ClientAPI::getEmployeeById(long long id) {
-    return Service::getEmployeeById(id);
+Order ClientAPI::getOrderById(const std::string &token, long long orderId) {
+    auto parsed = Service::verifyToken(token, role);
+    auto order = Service::getOrderById(orderId);
+    if (order.status != Order::vacant && order.clientId != parsed) {
+        throw bttClientPermissionError();
+    }
+    return Service::getOrderById(orderId);
 }
 
-Company ClientAPI::getCompanyById(long long id) {
-    return Service::getCompanyById(id);
+Employee ClientAPI::getEmployeeById(long long employeeId) {
+    return Service::getEmployeeById(employeeId);
 }
 
-void ClientAPI::changeClientFullName(long long id, std::string fullName) {
-    auto client = Service::getClientById(id);
+Company ClientAPI::getCompanyById(long long companyId) {
+    return Service::getCompanyById(companyId);
+}
+
+void ClientAPI::changeClientFullName(const std::string &token,
+                                     std::string fullName) {
+    auto parsed = Service::verifyToken(token, role);
+    auto client = Service::getClientById(parsed);
     client.fullName = std::move(fullName);
     Service::saveClient(client);
 }
 
-void ClientAPI::changeClientPhoneNumber(long long id, std::string phoneNumber) {
-    auto client = Service::getClientById(id);
-    client.phoneNumber = std::move(phoneNumber);
-    Service::saveClient(client);
-}
-
-void ClientAPI::changeClientEmail(long long id, std::string email) {
-    auto client = Service::getClientById(id);
+void ClientAPI::changeClientEmail(const std::string &token, std::string email) {
+    auto parsed = Service::verifyToken(token, role);
+    auto client = Service::getClientById(parsed);
     client.email = std::move(email);
     Service::saveClient(client);
 }
 
-std::vector<long long> ClientAPI::listOrdersOfClient(long long id) {
-    return Service::listOrdersOfClient(id);
+std::vector<long long> ClientAPI::listOrdersOfClient(const std::string &token) {
+    auto parsed = Service::verifyToken(token, role);
+    return Service::listOrdersOfClient(parsed);
 }
 
-std::vector<long long> ClientAPI::listVacantOrdersOfEmployee(long long id) {
-    return Service::listVacantOrdersOfEmployee(id);
+std::vector<long long> ClientAPI::listVacantOrdersOfEmployee(
+    long long employeeId) {
+    return Service::listVacantOrdersOfEmployee(employeeId);
 }
 
-}  // namespace dataBase
+std::string ClientAPI::authorizeClient(const std::string &phoneNumber,
+                                       const std::string &password) {
+    return Service::createToken(Service::authorizeClient(phoneNumber, password),
+                                role);
+}
+
+std::vector<long long> ClientAPI::listOrders(const orderSearchParams &params) {
+    return Service::listOrders(params);
+}
+
+}  // namespace db

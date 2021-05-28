@@ -3,28 +3,52 @@ project(btimetable)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_library(hiredis STATIC IMPORTED)
-#set_target_properties(hiredis PROPERTIES IMPORTED_LOCATION ../../../lib/hiredis_static.lib)
-set_target_properties(hiredis PROPERTIES IMPORTED_LOCATION ../lib/libhiredis.a)
-add_library(redis++ STATIC IMPORTED)
-#set_target_properties(redis++ PROPERTIES IMPORTED_LOCATION ../../../lib/redis++_static.lib)
-set_target_properties(redis++ PROPERTIES IMPORTED_LOCATION ../lib/libredis++.a)
+find_package(OpenSSL REQUIRED)
 
-add_executable(btimetable main.cpp
+set(SOURCE
         src/ClientAPI.cpp
         src/CompanyAPI.cpp
         src/Storage.cpp
         src/Service.cpp)
 
-add_library(btt STATIC
-        src/ClientAPI.cpp
-        src/CompanyAPI.cpp
-        src/Service.cpp
-        src/Storage.cpp)
+set(HEADERS
+        include/ClientAPI.h
+        include/CompanyAPI.h
+        include/Entities.h
+        include/btt/Service.h
+        include/btt/Storage.h)
 
-target_link_libraries(btimetable PRIVATE hiredis)
-target_link_libraries(btimetable PRIVATE redis++)
-target_include_directories(btimetable PRIVATE include)
-target_link_libraries(btt PRIVATE hiredis)
-target_link_libraries(btt PRIVATE redis++)
-target_include_directories(btt PRIVATE include)
+set(INCLUDE_DIRS
+        include include/postgresql)
+
+IF (WIN32)
+    find_package(PostgreSQL REQUIRED)
+    add_library(pqxx STATIC IMPORTED)
+    set_target_properties(pqxx PROPERTIES IMPORTED_LOCATION ../../../lib/pqxx.lib)
+    set(PQXX_LIB pqxx)
+    set(PQ_LIB PostgreSQL::PostgreSQL)
+    set(LIBS ws2_32.lib)
+ELSE ()
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpqxx -lpq -lcrypto -lssl")
+    find_library(PQXX_LIB pqxx)
+    find_library(PQ_LIB pq)
+ENDIF ()
+
+set(LIBS
+        ${PQXX_LIB} ${PQ_LIB} OpenSSL::SSL OpenSSL::Crypto ${LIBS})
+
+add_executable(init-db initDB.cpp)
+target_link_libraries(init-db ${LIBS})
+target_include_directories(init-db PRIVATE ${INCLUDE_DIRS})
+
+add_executable(data-base-test
+        testing/doctestMain.cpp
+        testing/dataBaseTest.cpp
+        ${SOURCE} ${HEADERS})
+target_link_libraries(data-base-test ${LIBS})
+target_include_directories(data-base-test PRIVATE ${INCLUDE_DIRS})
+
+add_library(btt STATIC
+        ${SOURCE} ${HEADERS})
+target_link_libraries(btt ${LIBS})
+target_include_directories(btt PRIVATE ${INCLUDE_DIRS})
