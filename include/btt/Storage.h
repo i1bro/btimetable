@@ -75,11 +75,15 @@ public:
 
     Update &set(Column col, const std::string &value);
 
+    Update &set(Column col, bool value);
+
     Update &set(Column col, long long value);
 
     Update &setNull(Column col);
 
     Update &where(Column col, const std::string &value);
+
+    Update &where(Column col, bool value);
 
     Update &where(Column col, long long value, const std::string &op = "=");
 
@@ -125,6 +129,8 @@ public:
     Select &columns(const std::vector<Column> &cols_);
 
     Select &where(Column col, const std::string &value);
+
+    Select &where(Column col, bool value);
 
     Select &where(Column col, long long value, const std::string &op = "=");
 

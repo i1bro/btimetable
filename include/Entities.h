@@ -1,32 +1,23 @@
 #ifndef BTIMETABLE_ENTITIES_H
 #define BTIMETABLE_ENTITIES_H
 
-#include <string>
-#include <utility>
-#include <vector>
 #include <exception>
 #include <stdexcept>
+#include <string>
 
 namespace db {
 
 struct bttError : std::runtime_error {
-    explicit bttError(const std::string &m)
-            : std::runtime_error(m) {
+    explicit bttError(const std::string &m) : std::runtime_error(m) {
     }
 };
 
 struct bttFatalError : bttError {
-    explicit bttFatalError(const std::string &m)
-            : bttError(m) {
+    explicit bttFatalError(const std::string &m) : bttError(m) {
     }
 };
 
-enum sortParam {
-    byRating,
-    byName,
-    byTimeStart,
-    byDuration
-};
+enum sortParam { byRating, byName, byTimeStart, byDuration };
 
 class Employee {
 public:

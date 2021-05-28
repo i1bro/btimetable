@@ -1,6 +1,7 @@
 #ifndef BTIMETABLE_COMPANYAPI_H
 #define BTIMETABLE_COMPANYAPI_H
 
+#include <vector>
 #include "Entities.h"
 
 namespace db {
@@ -71,7 +72,8 @@ public:
         long long employeeId);
 
     static std::vector<long long> listEmployeesOfCompany(
-        const std::string &token, sortParam sorted = byRating);
+        const std::string &token,
+        sortParam sorted = byRating);
 };
 }  // namespace db
 

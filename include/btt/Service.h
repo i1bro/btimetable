@@ -1,6 +1,8 @@
 #ifndef BTIMETABLE_SERVICE_H
 #define BTIMETABLE_SERVICE_H
 
+#include <string>
+#include <vector>
 #include "Entities.h"
 #include "Storage.h"
 
@@ -81,12 +83,14 @@ public:
 
     static std::vector<long long> listCompanies(sortParam sorted = byRating);
 
-    static std::vector<long long> listEmployeesOfCompany(long long id, sortParam sorted = byRating);
+    static std::vector<long long> listEmployeesOfCompany(
+        long long id,
+        sortParam sorted = byRating);
 
     static std::string createToken(long long id, const std::string &role);
 
-    static std::pair<long long, std::string> verifyToken(
-        const std::string &token);
+    static long long verifyToken(const std::string &token,
+                                 const std::string &role);
 };
 
 }  // namespace db

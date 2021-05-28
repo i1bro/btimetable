@@ -5,11 +5,11 @@ namespace db {
 namespace {
 const std::string &nameOfTable(Table t) {
     static std::unordered_map<Table, const std::string> nameOfTable = {
-        {tblClients,         "clients"},
-        {tblEmployees,       "employees"},
-        {tblOrders,          "orders"},
-        {tblCompanies,       "companies"},
-        {tblClientAccounts,  "client_accounts"},
+        {tblClients, "clients"},
+        {tblEmployees, "employees"},
+        {tblOrders, "orders"},
+        {tblCompanies, "companies"},
+        {tblClientAccounts, "client_accounts"},
         {tblCompanyAccounts, "company_accounts"}};
     return nameOfTable[t];
 };
@@ -19,21 +19,21 @@ const std::string &nameOfColumn(Column col) {
         {clmName, "name"},
         {clmFullName, "full_name"},
         {clmPhoneNumber, "phone_number"},
-        {clmEmail,      "email"},
-        {clmTitle,      "title"},
-        {clmTimeStart,  "time_start"},
-        {clmDuration,   "duration"},
-        {clmClientId,   "client_id"},
-        {clmCompanyId,  "company_id"},
+        {clmEmail, "email"},
+        {clmTitle, "title"},
+        {clmTimeStart, "time_start"},
+        {clmDuration, "duration"},
+        {clmClientId, "client_id"},
+        {clmCompanyId, "company_id"},
         {clmEmployeeId, "employee_id"},
-        {clmId,         "id"},
-        {clmRating,     "rating"},
-        {clmRatingSum,  "rating_sum"},
-        {clmRatingCnt,  "rating_cnt"},
-        {clmStatus,     "status"},
-        {clmIsDeleted,  "is_deleted"},
-        {clmPassword,   "password"},
-        {clmAll,        "*"}};
+        {clmId, "id"},
+        {clmRating, "rating"},
+        {clmRatingSum, "rating_sum"},
+        {clmRatingCnt, "rating_cnt"},
+        {clmStatus, "status"},
+        {clmIsDeleted, "is_deleted"},
+        {clmPassword, "password"},
+        {clmAll, "*"}};
     return nameOfColumn[col];
 };
 
@@ -89,6 +89,11 @@ Update &Update::set(Column col, long long value) {
     return *this;
 }
 
+Update &Update::set(Column col, bool value) {
+    values.emplace_back(col, std::string{(value ? "TRUE" : "FALSE")});
+    return *this;
+}
+
 Update &Update::setNull(Column col) {
     values.emplace_back(col, "NULL");
     return *this;
@@ -96,6 +101,12 @@ Update &Update::setNull(Column col) {
 
 Update &Update::where(Column col, const std::string &value) {
     conditions.emplace_back(col, " = '" + value + "'");
+    return *this;
+}
+
+Update &Update::where(Column col, bool value) {
+    conditions.emplace_back(col,
+                            " = " + std::string{(value ? "TRUE" : "FALSE")});
     return *this;
 }
 
@@ -228,6 +239,12 @@ Select &Select::where(Column col, const std::string &value) {
     return *this;
 }
 
+Select &Select::where(Column col, bool value) {
+    conditions.emplace_back(col,
+                            " = " + std::string{(value ? "TRUE" : "FALSE")});
+    return *this;
+}
+
 Select &Select::where(Column col, long long value, const std::string &op) {
     if (op != "=" && op != ">" && op != "<" && op != ">=" && op != "<=" &&
         op != "!=") {
@@ -288,7 +305,8 @@ Employee Result::toEmployee() {
     }
     Employee employee(
         cur["id"].as<long long>(), cur["company_id"].as<long long>(),
-        cur["full_name"].c_str(), rating, cur["rating_cnt"].as<long long>(), cur["is_deleted"].as<bool>());
+        cur["full_name"].c_str(), rating, cur["rating_cnt"].as<long long>(),
+        cur["is_deleted"].as<bool>());
     return employee;
 }
 

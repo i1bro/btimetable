@@ -1,6 +1,7 @@
 #ifndef BTIMETABLE_CLIENTAPI_H
 #define BTIMETABLE_CLIENTAPI_H
 
+#include <vector>
 #include "Entities.h"
 
 namespace db {
@@ -21,7 +22,9 @@ public:
     static std::vector<long long> listVacantOrdersOfCompany(
         long long companyId);
 
-    static std::vector<long long> listEmployeesOfCompany(long long companyId, sortParam sorted = byRating);
+    static std::vector<long long> listEmployeesOfCompany(
+        long long companyId,
+        sortParam sorted = byRating);
 
     static void bookOrder(const std::string &token, long long orderId);
 

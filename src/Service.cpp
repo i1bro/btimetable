@@ -1,16 +1,48 @@
 #include "btt/Service.h"
 #include <jwt-cpp/jwt.h>
-#include <iostream>
+#include <string>
+#include <vector>
 
 namespace db {
+
+namespace {
+struct bttSortParamError : bttError {
+    explicit bttSortParamError() : bttError("Invalid sort parameter.") {
+    }
+};
+
+struct bttInvalidRatingError : bttError {
+    explicit bttInvalidRatingError()
+        : bttError("Rating must be a number from 1 to 5.") {
+    }
+};
+
+struct bttLoginError : bttError {
+    explicit bttLoginError() : bttError("Incorrect phone number or password.") {
+    }
+};
+
+struct bttTokenCreationError : bttFatalError {
+    explicit bttTokenCreationError()
+        : bttFatalError("Could not create authorisation token.") {
+    }
+};
+
+struct bttInvalidTokenError : bttError {
+    explicit bttInvalidTokenError()
+        : bttError(
+              "Invalid authorisation token. Try logging in again or restarting "
+              "the app.") {
+    }
+};
+}  // namespace
 
 long long Service::createCompany(const std::string &phoneNumber,
                                  const std::string &password,
                                  const std::string &name) {
     long long resId =
         storage
-            .execute(
-                Insert(tblCompanies).set(clmName, name).returning(clmId))
+            .execute(Insert(tblCompanies).set(clmName, name).returning(clmId))
             .toLL();
     storage.execute(Insert(tblCompanyAccounts)
                         .set(clmPhoneNumber, phoneNumber)
@@ -70,7 +102,7 @@ std::vector<long long> Service::listVacantOrdersOfCompany(long long id) {
         .execute(Select(tblOrders)
                      .columns({clmId})
                      .where(clmCompanyId, id)
-                     .where(clmStatus, Order::vacant))
+                     .where(clmStatus, static_cast<long long>(Order::vacant)))
         .toVecLL();
 }
 
@@ -79,7 +111,7 @@ std::vector<long long> Service::listBookedOrdersOfCompany(long long id) {
         .execute(Select(tblOrders)
                      .columns({clmId})
                      .where(clmCompanyId, id)
-                     .where(clmStatus, Order::booked))
+                     .where(clmStatus, static_cast<long long>(Order::booked)))
         .toVecLL();
 }
 
@@ -104,7 +136,8 @@ Employee Service::getEmployeeById(long long id) {
 }
 
 Client Service::getClientById(long long id) {
-    return storage.execute(Select(tblClients).columns({clmAll}).where(clmId, id))
+    return storage
+        .execute(Select(tblClients).columns({clmAll}).where(clmId, id))
         .toClient();
 }
 
@@ -122,10 +155,12 @@ void Service::saveOrder(const Order &order) {
                         .set(clmEmployeeId, order.employeeId)
                         .where(clmId, order.id));
     if (order.clientId == -1) {
-        storage.execute(Update(tblOrders).setNull(clmClientId).where(clmId, order.id));
-    } else {
         storage.execute(
-            Update(tblOrders).set(clmClientId, order.clientId).where(clmId, order.id));
+            Update(tblOrders).setNull(clmClientId).where(clmId, order.id));
+    } else {
+        storage.execute(Update(tblOrders)
+                            .set(clmClientId, order.clientId)
+                            .where(clmId, order.id));
     }
 }
 
@@ -144,8 +179,9 @@ void Service::saveClient(const Client &client) {
 }
 
 void Service::saveCompany(const Company &company) {
-    storage.execute(
-        Update(tblCompanies).set(clmName, company.name).where(clmId, company.id));
+    storage.execute(Update(tblCompanies)
+                        .set(clmName, company.name)
+                        .where(clmId, company.id));
 }
 
 std::vector<long long> Service::listVacantOrdersOfEmployee(long long id) {
@@ -153,7 +189,7 @@ std::vector<long long> Service::listVacantOrdersOfEmployee(long long id) {
         .execute(Select(tblOrders)
                      .columns({clmId})
                      .where(clmEmployeeId, id)
-                     .where(clmStatus, Order::vacant))
+                     .where(clmStatus, static_cast<long long>(Order::vacant)))
         .toVecLL();
 }
 
@@ -162,7 +198,7 @@ std::vector<long long> Service::listBookedOrdersOfEmployee(long long id) {
         .execute(Select(tblOrders)
                      .columns({clmId})
                      .where(clmEmployeeId, id)
-                     .where(clmStatus, Order::booked))
+                     .where(clmStatus, static_cast<long long>(Order::booked)))
         .toVecLL();
 }
 
@@ -194,13 +230,17 @@ std::vector<long long> Service::listCompanies(sortParam sorted) {
             query.orderedBy("rating_sum / GREATEST (rating_cnt, 1) DESC");
             break;
         default:
-            throw std::exception();  // TODO
+            throw bttSortParamError();
     }
     return storage.execute(query).toVecLL();
 }
 
-std::vector<long long> Service::listEmployeesOfCompany(long long id, sortParam sorted) {
-    auto query = Select(tblEmployees).columns({clmId}).where(clmCompanyId, id);
+std::vector<long long> Service::listEmployeesOfCompany(long long id,
+                                                       sortParam sorted) {
+    auto query = Select(tblEmployees)
+                     .columns({clmId})
+                     .where(clmCompanyId, id)
+                     .where(clmIsDeleted, false);
     switch (sorted) {
         case byName:
             query.orderedBy(clmFullName);
@@ -209,38 +249,42 @@ std::vector<long long> Service::listEmployeesOfCompany(long long id, sortParam s
             query.orderedBy("rating_sum / GREATEST (rating_cnt, 1) DESC");
             break;
         default:
-            throw std::exception();  // TODO
+            throw bttSortParamError();
     }
     return storage.execute(query).toVecLL();
 }
 
 void Service::deleteEmployee(long long id) {
     storage.execute(
-            Update(tblEmployees).set(clmIsDeleted, true).where(clmId, id));
+        Update(tblEmployees).set(clmIsDeleted, true).where(clmId, id));
+    storage.execute(Update(tblOrders)
+                        .set(clmStatus, static_cast<long long>(Order::deleted))
+                        .where(clmEmployeeId, id));
 }
 
 void Service::deleteOrder(long long id) {
-    storage.execute(
-        Update(tblOrders).set(clmStatus, Order::deleted).where(clmId, id));
+    storage.execute(Update(tblOrders)
+                        .set(clmStatus, static_cast<long long>(Order::deleted))
+                        .where(clmId, id));
 }
 
 void Service::bookOrder(long long orderId, long long clientId) {
     storage.execute(Update(tblOrders)
                         .set(clmClientId, clientId)
-                        .set(clmStatus, Order::booked)
+                        .set(clmStatus, static_cast<long long>(Order::booked))
                         .where(clmId, orderId));
 }
 
 void Service::cancelOrder(long long id) {
     storage.execute(Update(tblOrders)
                         .setNull(clmClientId)
-                        .set(clmStatus, Order::vacant)
+                        .set(clmStatus, static_cast<long long>(Order::vacant))
                         .where(clmId, id));
 }
 
 void Service::rateOrder(long long id, int rating) {
     if (1 > rating || rating > 5) {
-        throw std::exception();  // TODO
+        throw bttInvalidRatingError();
     }
     auto order = getOrderById(id);
     long long curCompanyRatingSum =
@@ -259,10 +303,10 @@ void Service::rateOrder(long long id, int rating) {
         Update(tblCompanies)
             .set(clmRatingSum, curCompanyRatingSum + rating - order.rating)
             .where(clmId, order.companyId));
-    storage.execute(Update(tblEmployees)
-                        .set(clmRatingSum,
-                             curEmployeeRatingSum + rating - order.rating)
-                        .where(clmId, order.employeeId));
+    storage.execute(
+        Update(tblEmployees)
+            .set(clmRatingSum, curEmployeeRatingSum + rating - order.rating)
+            .where(clmId, order.employeeId));
     if (order.rating == 0) {
         long long curCompanyRatingCnt =
             storage
@@ -283,8 +327,9 @@ void Service::rateOrder(long long id, int rating) {
                             .set(clmRatingCnt, curEmployeeRatingCnt + 1)
                             .where(clmId, order.employeeId));
     }
-    storage.execute(
-        Update(tblOrders).set(clmRating, rating).where(clmId, id));
+    storage.execute(Update(tblOrders)
+                        .set(clmRating, static_cast<long long>(rating))
+                        .where(clmId, id));
 }
 
 long long Service::authorizeClient(const std::string &phoneNumber,
@@ -296,7 +341,7 @@ long long Service::authorizeClient(const std::string &phoneNumber,
     try {
         return res.toLL();
     } catch (...) {
-        throw std::exception();  // TODO
+        throw bttLoginError();
     }
 }
 
@@ -309,14 +354,14 @@ long long Service::authorizeCompany(const std::string &phoneNumber,
     try {
         return res.toLL();
     } catch (...) {
-        throw std::exception();  // TODO
+        throw bttLoginError();
     }
 }
 
 std::vector<long long> Service::listOrders(const orderSearchParams &params) {
     auto query = Select(tblOrders)
                      .columns({clmId})
-                     .where(clmStatus, Order::vacant)
+                     .where(clmStatus, static_cast<long long>(Order::vacant))
                      .where(clmDuration, params.minDuration, ">=")
                      .where(clmTimeStart, params.minTimeStart, ">=");
     if (params.maxDuration != -1) {
@@ -345,7 +390,7 @@ std::vector<long long> Service::listOrders(const orderSearchParams &params) {
             query.orderedBy(clmTitle);
             break;
         default:
-            throw std::exception();  // TODO
+            throw bttSortParamError();
     }
     return storage.execute(query).toVecLL();
 }
@@ -381,31 +426,44 @@ ZecXTmDuafIZ/KGGtwIDAQAB
 }  // namespace
 
 std::string Service::createToken(long long id, const std::string &role) {
-    auto token =
-        jwt::create()
-            .set_issuer("server")
-            .set_type("JWT")
-            .set_payload_claim("id",
-                               jwt::claim(std::string{std::to_string(id)}))
-            .set_payload_claim("role", jwt::claim(std::string{role}))
-            .sign(jwt::algorithm::rs256(rsaPubKey(), rsaPrivKey(), "", ""));
+    try {
+        auto token =
+            jwt::create()
+                .set_issuer("btt")
+                .set_type("JWT")
+                .set_payload_claim("id",
+                                   jwt::claim(std::string{std::to_string(id)}))
+                .set_payload_claim("role", jwt::claim(std::string{role}))
+                .sign(jwt::algorithm::rs256(rsaPubKey(), rsaPrivKey(), "", ""));
 
-    return token;
+        return token;
+    } catch (...) {
+        throw bttTokenCreationError();
+    }
 }
 
-std::pair<long long, std::string> Service::verifyToken(
-    const std::string &token) {
-    auto verify = jwt::verify()
-                      .allow_algorithm(jwt::algorithm::rs256(
-                          rsaPubKey(), rsaPrivKey(), "", ""))
-                      .with_issuer("server");
+long long Service::verifyToken(const std::string &token,
+                               const std::string &role) {
+    std::string parsedRole;
+    long long parsedId;
+    try {
+        auto verify = jwt::verify()
+                          .allow_algorithm(jwt::algorithm::rs256(
+                              rsaPubKey(), rsaPrivKey(), "", ""))
+                          .with_issuer("btt");
+        auto decoded = jwt::decode(token);
+        verify.verify(decoded);
+        parsedRole = decoded.get_payload_claims()["role"].to_json().to_str();
+        parsedId =
+            std::stoll(decoded.get_payload_claims()["id"].to_json().to_str());
+    } catch (...) {
+        throw bttInvalidTokenError();
+    }
 
-    auto decoded = jwt::decode(token);
-
-    verify.verify(decoded);
-
-    return {std::stoll(decoded.get_payload_claims()["id"].to_json().to_str()),
-            decoded.get_payload_claims()["role"].to_json().to_str()};
+    if (parsedRole != role) {
+        throw bttInvalidTokenError();
+    }
+    return parsedId;
 }
 
 }  // namespace db
