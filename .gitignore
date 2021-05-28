@@ -43,6 +43,7 @@ btimetable.cbp
 *.app
 
 /cmake-build-debug/
+/cmake-build-release/
 /.idea/
 /.vs/
 /out/

@@ -1,6 +1,10 @@
 #ifndef BTIMETABLE_STORAGE_H
 #define BTIMETABLE_STORAGE_H
 
+#ifndef BTT_CONNECTION_STRING
+#define BTT_CONNECTION_STRING "host=retired.tk port=58974 user=postgres password=T38ssGHzjcRviche7ex dbname=postgres"
+#endif
+
 #include <exception>
 #include <pqxx/pqxx>
 #include <unordered_map>
@@ -9,18 +13,16 @@
 
 namespace db {
 
-struct buildingQueryError : std::runtime_error {
+struct buildingQueryError : bttError {
     buildingQueryError()
-        : std::runtime_error(
-              "Please message me what did you do to get this exception") {
+        : bttError("This is a bug for sure. Please message me what did you do to get this exception.") {
     }
 };
 
-struct processingQueryError : std::runtime_error {
+struct processingQueryError : bttError {
     processingQueryError()
-        : std::runtime_error(
-              "pqxx thrown an exception while processing query. Input might be "
-              "corrupted") {
+        : bttError("pqxx thrown an exception while processing query. Input might be "
+                    "corrupted. This error shouldn't have reached user's eyes.") {
     }
 };
 
@@ -160,13 +162,15 @@ public:
 
     ~Result() = default;
 
-    Employee toEmployee();
+    size_t size();
 
-    Client toClient();
+    Employee toEmployee(size_t ind = 0);
 
-    Order toOrder();
+    Client toClient(size_t ind = 0);
 
-    Company toCompany();
+    Order toOrder(size_t ind = 0);
+
+    Company toCompany(size_t ind = 0);
 
     long long toLL();
 
@@ -175,15 +179,14 @@ public:
 
 class Storage {
 private:
-    pqxx::connection C{
-        "host=retired.tk "
-        "port=58974 "
-        "user=postgres "
-        "password=T38ssGHzjcRviche7ex "
-        "dbname=postgres"};
+    pqxx::connection C{BTT_CONNECTION_STRING};
 
 public:
     Result execute(Operation &op);
+
+    Result execute(pqxx::work &W, Operation &op);
+
+    pqxx::work startWork();
 
     Storage() = default;
 };

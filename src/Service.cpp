@@ -6,6 +6,13 @@
 namespace db {
 
 namespace {
+struct bttExecutionError : bttError {
+    explicit bttExecutionError()
+        : bttError(
+              "An unexpected error occurred while running this operation.") {
+    }
+};
+
 struct bttSortParamError : bttError {
     explicit bttSortParamError() : bttError("Invalid sort parameter.") {
     }
@@ -19,6 +26,12 @@ struct bttInvalidRatingError : bttError {
 
 struct bttLoginError : bttError {
     explicit bttLoginError() : bttError("Incorrect phone number or password.") {
+    }
+};
+
+struct bttRegistrationError : bttError {
+    explicit bttRegistrationError()
+        : bttError("Account with this phone number already exists.") {
     }
 };
 
@@ -37,18 +50,43 @@ struct bttInvalidTokenError : bttError {
 };
 }  // namespace
 
+Storage &Service::storage() {
+    try {
+        static Storage storage_ = Storage();
+        return storage_;
+    } catch (...) {
+        throw bttFatalError("Can't connect to data base.");
+    }
+}
+
 long long Service::createCompany(const std::string &phoneNumber,
                                  const std::string &password,
                                  const std::string &name) {
-    long long resId =
-        storage
-            .execute(Insert(tblCompanies).set(clmName, name).returning(clmId))
-            .toLL();
-    storage.execute(Insert(tblCompanyAccounts)
-                        .set(clmPhoneNumber, phoneNumber)
-                        .set(clmPassword, password)
-                        .set(clmCompanyId, resId));
-    return resId;
+    try {
+        auto work = storage().startWork();
+        long long resId =
+            storage()
+                .execute(
+                    work,
+                    Insert(tblCompanies).set(clmName, name).returning(clmId))
+                .toLL();
+        if (!storage()
+                 .execute(work, Select(tblCompanyAccounts)
+                                    .columns({clmCompanyId})
+                                    .where(clmPhoneNumber, phoneNumber))
+                 .toVecLL()
+                 .empty()) {
+            throw bttRegistrationError();
+        }
+        storage().execute(work, Insert(tblCompanyAccounts)
+                                    .set(clmPhoneNumber, phoneNumber)
+                                    .set(clmPassword, password)
+                                    .set(clmCompanyId, resId));
+        work.commit();
+        return resId;
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 long long Service::createOrder(long long companyId,
@@ -56,343 +94,489 @@ long long Service::createOrder(long long companyId,
                                long long timeStart,
                                long long duration,
                                long long employeeId) {
-    long long resId = storage
-                          .execute(Insert(tblOrders)
-                                       .set(clmCompanyId, companyId)
-                                       .set(clmTitle, title)
-                                       .set(clmTimeStart, timeStart)
-                                       .set(clmDuration, duration)
-                                       .set(clmEmployeeId, employeeId)
-                                       .returning(clmId))
-                          .toLL();
-    return resId;
+    try {
+        long long resId = storage()
+                              .execute(Insert(tblOrders)
+                                           .set(clmCompanyId, companyId)
+                                           .set(clmTitle, title)
+                                           .set(clmTimeStart, timeStart)
+                                           .set(clmDuration, duration)
+                                           .set(clmEmployeeId, employeeId)
+                                           .returning(clmId))
+                              .toLL();
+        return resId;
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 long long Service::createEmployee(long long companyId,
                                   const std::string &fullName) {
-    long long resId = storage
-                          .execute(Insert(tblEmployees)
-                                       .set(clmCompanyId, companyId)
-                                       .set(clmFullName, fullName)
-                                       .returning(clmId))
-                          .toLL();
-    return resId;
+    try {
+        long long resId = storage()
+                              .execute(Insert(tblEmployees)
+                                           .set(clmCompanyId, companyId)
+                                           .set(clmFullName, fullName)
+                                           .returning(clmId))
+                              .toLL();
+        return resId;
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 long long Service::createClient(const std::string &phoneNumber,
                                 const std::string &password,
                                 const std::string &fullName,
                                 const std::string &email) {
-    long long resId = storage
-                          .execute(Insert(tblClients)
-                                       .set(clmFullName, fullName)
-                                       .set(clmPhoneNumber, phoneNumber)
-                                       .set(clmEmail, email)
-                                       .returning(clmId))
-                          .toLL();
-    storage.execute(Insert(tblClientAccounts)
-                        .set(clmPhoneNumber, phoneNumber)
-                        .set(clmPassword, password)
-                        .set(clmClientId, resId));
-    return resId;
+    try {
+        auto work = storage().startWork();
+        long long resId =
+            storage()
+                .execute(work, Insert(tblClients)
+                                   .set(clmFullName, fullName)
+                                   .set(clmPhoneNumber, phoneNumber)
+                                   .set(clmEmail, email)
+                                   .returning(clmId))
+                .toLL();
+        if (!storage()
+                 .execute(work, Select(tblClientAccounts)
+                                    .columns({clmClientId})
+                                    .where(clmPhoneNumber, phoneNumber))
+                 .toVecLL()
+                 .empty()) {
+            throw bttRegistrationError();
+        }
+        storage().execute(work, Insert(tblClientAccounts)
+                                    .set(clmPhoneNumber, phoneNumber)
+                                    .set(clmPassword, password)
+                                    .set(clmClientId, resId));
+        work.commit();
+        return resId;
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 std::vector<long long> Service::listVacantOrdersOfCompany(long long id) {
-    return storage
-        .execute(Select(tblOrders)
-                     .columns({clmId})
-                     .where(clmCompanyId, id)
-                     .where(clmStatus, static_cast<long long>(Order::vacant)))
-        .toVecLL();
+    try {
+        return storage()
+            .execute(
+                Select(tblOrders)
+                    .columns({clmId})
+                    .where(clmCompanyId, id)
+                    .where(clmStatus, static_cast<long long>(Order::vacant)))
+            .toVecLL();
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 std::vector<long long> Service::listBookedOrdersOfCompany(long long id) {
-    return storage
-        .execute(Select(tblOrders)
-                     .columns({clmId})
-                     .where(clmCompanyId, id)
-                     .where(clmStatus, static_cast<long long>(Order::booked)))
-        .toVecLL();
+    try {
+        return storage()
+            .execute(
+                Select(tblOrders)
+                    .columns({clmId})
+                    .where(clmCompanyId, id)
+                    .where(clmStatus, static_cast<long long>(Order::booked)))
+            .toVecLL();
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 std::vector<long long> Service::listAllOrdersOfCompany(long long id) {
-    return storage
-        .execute(Select(tblOrders)
-                     .columns({clmId})
-                     .where(clmCompanyId, id)
-                     .where(clmStatus, Order::deleted, "!="))
-        .toVecLL();
+    try {
+        return storage()
+            .execute(Select(tblOrders)
+                         .columns({clmId})
+                         .where(clmCompanyId, id)
+                         .where(clmStatus, Order::deleted, "!="))
+            .toVecLL();
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 Order Service::getOrderById(long long id) {
-    return storage.execute(Select(tblOrders).columns({clmAll}).where(clmId, id))
-        .toOrder();
+    try {
+        return storage()
+            .execute(Select(tblOrders).columns({clmAll}).where(clmId, id))
+            .toOrder();
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 Employee Service::getEmployeeById(long long id) {
-    return storage
-        .execute(Select(tblEmployees).columns({clmAll}).where(clmId, id))
-        .toEmployee();
+    try {
+        return storage()
+            .execute(Select(tblEmployees).columns({clmAll}).where(clmId, id))
+            .toEmployee();
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 Client Service::getClientById(long long id) {
-    return storage
-        .execute(Select(tblClients).columns({clmAll}).where(clmId, id))
-        .toClient();
+    try {
+        return storage()
+            .execute(Select(tblClients).columns({clmAll}).where(clmId, id))
+            .toClient();
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 Company Service::getCompanyById(long long id) {
-    return storage
-        .execute(Select(tblCompanies).columns({clmAll}).where(clmId, id))
-        .toCompany();
+    try {
+        return storage()
+            .execute(Select(tblCompanies).columns({clmAll}).where(clmId, id))
+            .toCompany();
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 void Service::saveOrder(const Order &order) {
-    storage.execute(Update(tblOrders)
-                        .set(clmTitle, order.title)
-                        .set(clmTimeStart, order.timeStart)
-                        .set(clmDuration, order.duration)
-                        .set(clmEmployeeId, order.employeeId)
-                        .where(clmId, order.id));
-    if (order.clientId == -1) {
-        storage.execute(
-            Update(tblOrders).setNull(clmClientId).where(clmId, order.id));
-    } else {
-        storage.execute(Update(tblOrders)
-                            .set(clmClientId, order.clientId)
-                            .where(clmId, order.id));
+    try {
+        auto work = storage().startWork();
+        storage().execute(work, Update(tblOrders)
+                                    .set(clmTitle, order.title)
+                                    .set(clmTimeStart, order.timeStart)
+                                    .set(clmDuration, order.duration)
+                                    .set(clmEmployeeId, order.employeeId)
+                                    .where(clmId, order.id));
+        if (order.clientId == -1) {
+            storage().execute(
+                work,
+                Update(tblOrders).setNull(clmClientId).where(clmId, order.id));
+        } else {
+            storage().execute(work, Update(tblOrders)
+                                        .set(clmClientId, order.clientId)
+                                        .where(clmId, order.id));
+        }
+        work.commit();
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
     }
 }
 
 void Service::saveEmployee(const Employee &employee) {
-    storage.execute(Update(tblEmployees)
-                        .set(clmFullName, employee.fullName)
-                        .where(clmId, employee.id));
+    try {
+        storage().execute(Update(tblEmployees)
+                              .set(clmFullName, employee.fullName)
+                              .where(clmId, employee.id));
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 void Service::saveClient(const Client &client) {
-    storage.execute(Update(tblClients)
-                        .set(clmFullName, client.fullName)
-                        .set(clmPhoneNumber, client.phoneNumber)
-                        .set(clmEmail, client.email)
-                        .where(clmId, client.id));
+    try {
+        storage().execute(Update(tblClients)
+                              .set(clmFullName, client.fullName)
+                              .set(clmPhoneNumber, client.phoneNumber)
+                              .set(clmEmail, client.email)
+                              .where(clmId, client.id));
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 void Service::saveCompany(const Company &company) {
-    storage.execute(Update(tblCompanies)
-                        .set(clmName, company.name)
-                        .where(clmId, company.id));
+    try {
+        storage().execute(Update(tblCompanies)
+                              .set(clmName, company.name)
+                              .where(clmId, company.id));
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 std::vector<long long> Service::listVacantOrdersOfEmployee(long long id) {
-    return storage
-        .execute(Select(tblOrders)
-                     .columns({clmId})
-                     .where(clmEmployeeId, id)
-                     .where(clmStatus, static_cast<long long>(Order::vacant)))
-        .toVecLL();
+    try {
+        return storage()
+            .execute(
+                Select(tblOrders)
+                    .columns({clmId})
+                    .where(clmEmployeeId, id)
+                    .where(clmStatus, static_cast<long long>(Order::vacant)))
+            .toVecLL();
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 std::vector<long long> Service::listBookedOrdersOfEmployee(long long id) {
-    return storage
-        .execute(Select(tblOrders)
-                     .columns({clmId})
-                     .where(clmEmployeeId, id)
-                     .where(clmStatus, static_cast<long long>(Order::booked)))
-        .toVecLL();
+    try {
+        return storage()
+            .execute(
+                Select(tblOrders)
+                    .columns({clmId})
+                    .where(clmEmployeeId, id)
+                    .where(clmStatus, static_cast<long long>(Order::booked)))
+            .toVecLL();
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 std::vector<long long> Service::listAllOrdersOfEmployee(long long id) {
-    return storage
-        .execute(Select(tblOrders)
-                     .columns({clmId})
-                     .where(clmEmployeeId, id)
-                     .where(clmStatus, Order::deleted, "!="))
-        .toVecLL();
+    try {
+        return storage()
+            .execute(Select(tblOrders)
+                         .columns({clmId})
+                         .where(clmEmployeeId, id)
+                         .where(clmStatus, Order::deleted, "!="))
+            .toVecLL();
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 std::vector<long long> Service::listOrdersOfClient(long long id) {
-    return storage
-        .execute(Select(tblOrders)
-                     .columns({clmId})
-                     .where(clmClientId, id)
-                     .where(clmStatus, Order::deleted, "!="))
-        .toVecLL();
+    try {
+        return storage()
+            .execute(Select(tblOrders)
+                         .columns({clmId})
+                         .where(clmClientId, id)
+                         .where(clmStatus, Order::deleted, "!="))
+            .toVecLL();
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 std::vector<long long> Service::listCompanies(sortParam sorted) {
-    auto query = Select(tblCompanies).columns({clmId});
-    switch (sorted) {
-        case byName:
-            query.orderedBy(clmFullName);
-            break;
-        case byRating:
-            query.orderedBy("rating_sum / GREATEST (rating_cnt, 1) DESC");
-            break;
-        default:
-            throw bttSortParamError();
+    try {
+        auto query = Select(tblCompanies).columns({clmId});
+        switch (sorted) {
+            case byName:
+                query.orderedBy(clmFullName);
+                break;
+            case byRating:
+                query.orderedBy("rating_sum / GREATEST (rating_cnt, 1) DESC");
+                break;
+            default:
+                throw bttSortParamError();
+        }
+        return storage().execute(query).toVecLL();
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
     }
-    return storage.execute(query).toVecLL();
 }
 
 std::vector<long long> Service::listEmployeesOfCompany(long long id,
                                                        sortParam sorted) {
-    auto query = Select(tblEmployees)
-                     .columns({clmId})
-                     .where(clmCompanyId, id)
-                     .where(clmIsDeleted, false);
-    switch (sorted) {
-        case byName:
-            query.orderedBy(clmFullName);
-            break;
-        case byRating:
-            query.orderedBy("rating_sum / GREATEST (rating_cnt, 1) DESC");
-            break;
-        default:
-            throw bttSortParamError();
+    try {
+        auto query = Select(tblEmployees)
+                         .columns({clmId})
+                         .where(clmCompanyId, id)
+                         .where(clmIsDeleted, false);
+        switch (sorted) {
+            case byName:
+                query.orderedBy(clmFullName);
+                break;
+            case byRating:
+                query.orderedBy("rating_sum / GREATEST (rating_cnt, 1) DESC");
+                break;
+            default:
+                throw bttSortParamError();
+        }
+        return storage().execute(query).toVecLL();
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
     }
-    return storage.execute(query).toVecLL();
 }
 
 void Service::deleteEmployee(long long id) {
-    storage.execute(
-        Update(tblEmployees).set(clmIsDeleted, true).where(clmId, id));
-    storage.execute(Update(tblOrders)
-                        .set(clmStatus, static_cast<long long>(Order::deleted))
-                        .where(clmEmployeeId, id));
+    try {
+        auto work = storage().startWork();
+        storage().execute(
+            work,
+            Update(tblEmployees).set(clmIsDeleted, true).where(clmId, id));
+        storage().execute(
+            work, Update(tblOrders)
+                      .set(clmStatus, static_cast<long long>(Order::deleted))
+                      .where(clmEmployeeId, id));
+        work.commit();
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 void Service::deleteOrder(long long id) {
-    storage.execute(Update(tblOrders)
-                        .set(clmStatus, static_cast<long long>(Order::deleted))
-                        .where(clmId, id));
+    try {
+        storage().execute(
+            Update(tblOrders)
+                .set(clmStatus, static_cast<long long>(Order::deleted))
+                .where(clmId, id));
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 void Service::bookOrder(long long orderId, long long clientId) {
-    storage.execute(Update(tblOrders)
-                        .set(clmClientId, clientId)
-                        .set(clmStatus, static_cast<long long>(Order::booked))
-                        .where(clmId, orderId));
+    try {
+        storage().execute(
+            Update(tblOrders)
+                .set(clmClientId, clientId)
+                .set(clmStatus, static_cast<long long>(Order::booked))
+                .where(clmId, orderId));
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 void Service::cancelOrder(long long id) {
-    storage.execute(Update(tblOrders)
-                        .setNull(clmClientId)
-                        .set(clmStatus, static_cast<long long>(Order::vacant))
-                        .where(clmId, id));
+    try {
+        storage().execute(
+            Update(tblOrders)
+                .setNull(clmClientId)
+                .set(clmStatus, static_cast<long long>(Order::vacant))
+                .where(clmId, id));
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
+    }
 }
 
 void Service::rateOrder(long long id, int rating) {
-    if (1 > rating || rating > 5) {
-        throw bttInvalidRatingError();
-    }
-    auto order = getOrderById(id);
-    long long curCompanyRatingSum =
-        storage
-            .execute(Select(tblCompanies)
-                         .columns({clmRatingSum})
-                         .where(clmId, order.companyId))
-            .toLL();
-    long long curEmployeeRatingSum =
-        storage
-            .execute(Select(tblEmployees)
-                         .columns({clmRatingSum})
-                         .where(clmId, order.employeeId))
-            .toLL();
-    storage.execute(
-        Update(tblCompanies)
-            .set(clmRatingSum, curCompanyRatingSum + rating - order.rating)
-            .where(clmId, order.companyId));
-    storage.execute(
-        Update(tblEmployees)
-            .set(clmRatingSum, curEmployeeRatingSum + rating - order.rating)
-            .where(clmId, order.employeeId));
-    if (order.rating == 0) {
-        long long curCompanyRatingCnt =
-            storage
-                .execute(Select(tblCompanies)
-                             .columns({clmRatingCnt})
-                             .where(clmId, order.companyId))
+    try {
+        if (1 > rating || rating > 5) {
+            throw bttInvalidRatingError();
+        }
+        auto order = getOrderById(id);
+        auto work = storage().startWork();
+        long long curCompanyRatingSum =
+            storage()
+                .execute(work, Select(tblCompanies)
+                                   .columns({clmRatingSum})
+                                   .where(clmId, order.companyId))
                 .toLL();
-        long long curEmployeeRatingCnt =
-            storage
-                .execute(Select(tblEmployees)
-                             .columns({clmRatingCnt})
-                             .where(clmId, order.employeeId))
+        long long curEmployeeRatingSum =
+            storage()
+                .execute(work, Select(tblEmployees)
+                                   .columns({clmRatingSum})
+                                   .where(clmId, order.employeeId))
                 .toLL();
-        storage.execute(Update(tblCompanies)
-                            .set(clmRatingCnt, curCompanyRatingCnt + 1)
-                            .where(clmId, order.companyId));
-        storage.execute(Update(tblEmployees)
-                            .set(clmRatingCnt, curEmployeeRatingCnt + 1)
-                            .where(clmId, order.employeeId));
+        storage().execute(
+            work,
+            Update(tblCompanies)
+                .set(clmRatingSum, curCompanyRatingSum + rating - order.rating)
+                .where(clmId, order.companyId));
+        storage().execute(
+            work,
+            Update(tblEmployees)
+                .set(clmRatingSum, curEmployeeRatingSum + rating - order.rating)
+                .where(clmId, order.employeeId));
+        if (order.rating == 0) {
+            long long curCompanyRatingCnt =
+                storage()
+                    .execute(work, Select(tblCompanies)
+                                       .columns({clmRatingCnt})
+                                       .where(clmId, order.companyId))
+                    .toLL();
+            long long curEmployeeRatingCnt =
+                storage()
+                    .execute(work, Select(tblEmployees)
+                                       .columns({clmRatingCnt})
+                                       .where(clmId, order.employeeId))
+                    .toLL();
+            storage().execute(work,
+                              Update(tblCompanies)
+                                  .set(clmRatingCnt, curCompanyRatingCnt + 1)
+                                  .where(clmId, order.companyId));
+            storage().execute(work,
+                              Update(tblEmployees)
+                                  .set(clmRatingCnt, curEmployeeRatingCnt + 1)
+                                  .where(clmId, order.employeeId));
+        }
+        storage().execute(work,
+                          Update(tblOrders)
+                              .set(clmRating, static_cast<long long>(rating))
+                              .where(clmId, id));
+        work.commit();
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
     }
-    storage.execute(Update(tblOrders)
-                        .set(clmRating, static_cast<long long>(rating))
-                        .where(clmId, id));
 }
 
 long long Service::authorizeClient(const std::string &phoneNumber,
                                    const std::string &password) {
-    auto res = storage.execute(Select(tblClientAccounts)
-                                   .columns({clmClientId})
-                                   .where(clmPhoneNumber, phoneNumber)
-                                   .where(clmPassword, password));
     try {
-        return res.toLL();
-    } catch (...) {
-        throw bttLoginError();
+        auto res = storage().execute(Select(tblClientAccounts)
+                                         .columns({clmClientId})
+                                         .where(clmPhoneNumber, phoneNumber)
+                                         .where(clmPassword, password));
+        try {
+            return res.toLL();
+        } catch (...) {
+            throw bttLoginError();
+        }
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
     }
 }
 
 long long Service::authorizeCompany(const std::string &phoneNumber,
                                     const std::string &password) {
-    auto res = storage.execute(Select(tblCompanyAccounts)
-                                   .columns({clmCompanyId})
-                                   .where(clmPhoneNumber, phoneNumber)
-                                   .where(clmPassword, password));
     try {
-        return res.toLL();
-    } catch (...) {
-        throw bttLoginError();
+        auto res = storage().execute(Select(tblCompanyAccounts)
+                                         .columns({clmCompanyId})
+                                         .where(clmPhoneNumber, phoneNumber)
+                                         .where(clmPassword, password));
+        try {
+            return res.toLL();
+        } catch (...) {
+            throw bttLoginError();
+        }
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
     }
 }
 
 std::vector<long long> Service::listOrders(const orderSearchParams &params) {
-    auto query = Select(tblOrders)
-                     .columns({clmId})
-                     .where(clmStatus, static_cast<long long>(Order::vacant))
-                     .where(clmDuration, params.minDuration, ">=")
-                     .where(clmTimeStart, params.minTimeStart, ">=");
-    if (params.maxDuration != -1) {
-        query.where(clmCompanyId, params.maxDuration, "<=");
+    try {
+        auto query =
+            Select(tblOrders)
+                .columns({clmId})
+                .where(clmStatus, static_cast<long long>(Order::vacant))
+                .where(clmDuration, params.minDuration, ">=")
+                .where(clmTimeStart, params.minTimeStart, ">=");
+        if (params.maxDuration != -1) {
+            query.where(clmCompanyId, params.maxDuration, "<=");
+        }
+        if (params.maxTimeStart != -1) {
+            query.where(clmEmployeeId, params.maxTimeStart, "<=");
+        }
+        if (params.companyId != -1) {
+            query.where(clmCompanyId, params.companyId);
+        }
+        if (params.employeeId != -1) {
+            query.where(clmEmployeeId, params.employeeId);
+        }
+        if (!params.title.empty()) {
+            query.where(clmTitle, params.title);
+        }
+        switch (params.sorted) {
+            case byTimeStart:
+                query.orderedBy(clmTimeStart);
+                break;
+            case byDuration:
+                query.orderedBy(clmDuration);
+                break;
+            case byName:
+                query.orderedBy(clmTitle);
+                break;
+            default:
+                throw bttSortParamError();
+        }
+        return storage().execute(query).toVecLL();
+    } catch (processingQueryError &) {
+        throw bttExecutionError();
     }
-    if (params.maxTimeStart != -1) {
-        query.where(clmEmployeeId, params.maxTimeStart, "<=");
-    }
-    if (params.companyId != -1) {
-        query.where(clmCompanyId, params.companyId);
-    }
-    if (params.employeeId != -1) {
-        query.where(clmEmployeeId, params.employeeId);
-    }
-    if (!params.title.empty()) {
-        query.where(clmTitle, params.title);
-    }
-    switch (params.sorted) {
-        case byTimeStart:
-            query.orderedBy(clmTimeStart);
-            break;
-        case byDuration:
-            query.orderedBy(clmDuration);
-            break;
-        case byName:
-            query.orderedBy(clmTitle);
-            break;
-        default:
-            throw bttSortParamError();
-    }
-    return storage.execute(query).toVecLL();
 }
 
 namespace {

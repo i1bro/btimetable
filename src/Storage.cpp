@@ -296,62 +296,111 @@ Result &Result::operator=(pqxx::result &&res_) {
     return *this;
 }
 
-Employee Result::toEmployee() {
-    const pqxx::row &cur = res[0];
-    double rating = 0;
-    if (cur["rating_cnt"].as<long long>() != 0) {
-        rating =
-            cur["rating_sum"].as<double>() / cur["rating_cnt"].as<double>();
+Employee Result::toEmployee(size_t ind) {
+    if(res.size() <= ind) {
+        throw processingQueryError();
     }
-    Employee employee(
-        cur["id"].as<long long>(), cur["company_id"].as<long long>(),
-        cur["full_name"].c_str(), rating, cur["rating_cnt"].as<long long>(),
-        cur["is_deleted"].as<bool>());
-    return employee;
-}
-
-Client Result::toClient() {
-    const pqxx::row &cur = res[0];
-    Client client(cur["id"].as<long long>(), cur["full_name"].c_str(),
-                  cur["phone_number"].c_str(), cur["email"].c_str());
-    return client;
-}
-
-Order Result::toOrder() {
-    const pqxx::row &cur = res[0];
-    Order order(
-        cur["id"].as<long long>(), cur["company_id"].as<long long>(),
-        cur["title"].c_str(), cur["time_start"].as<long long>(),
-        cur["duration"].as<long long>(),
-        (cur["client_id"].is_null() ? -1 : cur["client_id"].as<long long>()),
-        cur["employee_id"].as<long long>(),
-        static_cast<Order::statusEnum>(cur["status"].as<int>()),
-        cur["rating"].as<int>());
-    return order;
-}
-
-Company Result::toCompany() {
-    const pqxx::row &cur = res[0];
-    double rating = 0;
-    if (cur["rating_cnt"].as<long long>() != 0) {
-        rating =
-            cur["rating_sum"].as<double>() / cur["rating_cnt"].as<double>();
+    try {
+        const pqxx::row &cur = res[ind];
+        double rating = 0;
+        if (cur["rating_cnt"].as<long long>() != 0) {
+            rating =
+                    cur["rating_sum"].as<double>() / cur["rating_cnt"].as<double>();
+        }
+        Employee employee(
+                cur["id"].as<long long>(), cur["company_id"].as<long long>(),
+                cur["full_name"].c_str(), rating, cur["rating_cnt"].as<long long>(),
+                cur["is_deleted"].as<bool>());
+        return employee;
+    } catch(...) {
+        throw processingQueryError();
     }
-    Company company(cur["id"].as<long long>(), cur["name"].c_str(), rating,
-                    cur["rating_cnt"].as<long long>());
-    return company;
+}
+
+Client Result::toClient(size_t ind) {
+    if(res.size() <= ind) {
+        throw processingQueryError();
+    }
+    try {
+        const pqxx::row &cur = res[ind];
+        Client client(cur["id"].as<long long>(), cur["full_name"].c_str(),
+                      cur["phone_number"].c_str(), cur["email"].c_str());
+        return client;
+    } catch(...) {
+        throw processingQueryError();
+    }
+}
+
+Order Result::toOrder(size_t ind) {
+    if(res.size() <= ind) {
+        throw processingQueryError();
+    }
+    try {
+        const pqxx::row &cur = res[ind];
+        Order order(
+                cur["id"].as<long long>(), cur["company_id"].as<long long>(),
+                cur["title"].c_str(), cur["time_start"].as<long long>(),
+                cur["duration"].as<long long>(),
+                (cur["client_id"].is_null() ? -1 : cur["client_id"].as<long long>()),
+                cur["employee_id"].as<long long>(),
+                static_cast<Order::statusEnum>(cur["status"].as<int>()),
+                cur["rating"].as<int>());
+        return order;
+    } catch(...) {
+        throw processingQueryError();
+    }
+}
+
+Company Result::toCompany(size_t ind) {
+    if(res.size() <= ind) {
+        throw processingQueryError();
+    }
+    try {
+        const pqxx::row &cur = res[ind];
+        double rating = 0;
+        if (cur["rating_cnt"].as<long long>() != 0) {
+            rating =
+                    cur["rating_sum"].as<double>() / cur["rating_cnt"].as<double>();
+        }
+        Company company(cur["id"].as<long long>(), cur["name"].c_str(), rating,
+                        cur["rating_cnt"].as<long long>());
+        return company;
+    } catch(...) {
+        throw processingQueryError();
+    }
 }
 
 long long Result::toLL() {
-    return res[0][0].as<long long>();
+    if(res.size() != 1 || res[0].size() != 1) {
+        throw processingQueryError();
+    }
+    try {
+        return res[0][0].as<long long>();
+    } catch(...) {
+        throw processingQueryError();
+    }
 }
 
 std::vector<long long> Result::toVecLL() {
-    std::vector<long long> ans;
-    for (auto &&re : res) {
-        ans.push_back(re["id"].as<long long>());
+    if(res.empty()) {
+        return {};
     }
-    return ans;
+    if(res[0].size() != 1) {
+        throw processingQueryError();
+    }
+    try {
+        std::vector<long long> ans;
+        for (auto &&re : res) {
+            ans.push_back(re[0].as<long long>());
+        }
+        return ans;
+    } catch(...) {
+        throw processingQueryError();
+    }
+}
+
+size_t Result::size() {
+    return res.size();
 }
 
 Result Storage::execute(Operation &op) {
@@ -361,10 +410,23 @@ Result Storage::execute(Operation &op) {
         Result res(W.exec(op.build()));
         W.commit();
         return res;
-    } catch (const std::exception &e) {
-        std::cerr << e.what();
-        throw e;
+    } catch (...) {
+        throw processingQueryError();
     }
+}
+
+Result Storage::execute(pqxx::work &W, Operation &op) {
+    try {
+        auto a = op.build();
+        Result res(W.exec(op.build()));
+        return res;
+    } catch (...) {
+        throw processingQueryError();
+    }
+}
+
+pqxx::work Storage::startWork() {
+    return pqxx::work{C};
 }
 
 }  // namespace db

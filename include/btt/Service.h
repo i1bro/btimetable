@@ -10,7 +10,7 @@ namespace db {
 
 class Service {
 private:
-    inline static Storage storage = Storage();
+    static Storage &storage();
 
 public:
     Service() = default;
